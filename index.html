@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ATC Report Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;min-height:100%;background:#F4F2EE;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1B2A4A;}
+button,input,select,textarea{font-family:inherit;font-size:14px;}
+#app{min-height:100vh;padding-bottom:40px;}
+.hidden{display:none!important;}
+/* Header */
+#hdr{background:#0F1C35;height:62px;display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:3px solid #C49A1E;position:sticky;top:0;z-index:200;}
+#hdr-logo{width:38px;height:38px;border-radius:50%;background:#1B2A4A;border:2px solid #C49A1E;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+#hdr-info{flex:1;}
+#hdr-info .t1{color:#fff;font-weight:700;font-size:13px;font-family:Georgia,serif;}
+#hdr-info .t2{color:#C49A1E;font-size:10px;}
+.hdr-btn{background:#C49A1E;color:#0F1C35;border:none;border-radius:8px;padding:8px 12px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;}
+.hdr-btn-out{background:transparent;color:#C49A1E;border:1.5px solid #C49A1E;border-radius:8px;padding:7px 10px;font-weight:700;font-size:12px;cursor:pointer;}
+/* Screens */
+.screen{display:none;padding:14px 14px 60px;}
+.screen.active{display:block;}
+/* Cards */
+.card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(15,28,53,.08);margin-bottom:12px;overflow:hidden;}
+.card-h{background:#1B2A4A;padding:11px 16px;font-family:Georgia,serif;font-size:12.5px;color:#fff;}
+.card-b{padding:14px 16px;}
+/* Inputs */
+.lbl{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#1B2A4A;margin-bottom:5px;}
+input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{width:100%;padding:10px 12px;border:1.5px solid #E8E5DF;border-radius:8px;font-size:13.5px;color:#1B2A4A;background:#FAFAF8;-webkit-appearance:none;}
+textarea{min-height:120px;resize:vertical;line-height:1.6;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+/* Type pills */
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.pill{padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid transparent;background:#f0f0f0;color:#666;}
+.pill.active-shift{background:#EBF1FA;border-color:#1A4F9C;color:#1A4F9C;}
+.pill.active-weekly{background:#E4F2EC;border-color:#1C6E45;color:#1C6E45;}
+.pill.active-incident{background:#FBEBE8;border-color:#B02E1A;color:#B02E1A;}
+.pill.active-invoice{background:#F0EBF8;border-color:#5B2D8E;color:#5B2D8E;}
+/* Buttons */
+.btn-gen{width:100%;padding:16px;border:none;border-radius:12px;color:#fff;font-family:Georgia,serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:10px;}
+.btn-dl{width:100%;padding:15px;border:none;border-radius:12px;background:#1B2A4A;color:#fff;font-family:Georgia,serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;}
+.btn-green{background:#1C6E45;color:#fff;border:none;border-radius:12px;padding:13px;font-family:Georgia,serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:8px;text-decoration:none;}
+.btn-gold{background:#C49A1E;color:#0F1C35;border:none;border-radius:12px;padding:13px;font-family:Georgia,serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:8px;text-decoration:none;}
+.btn-outline{padding:12px;border:2px solid #CCC;border-radius:10px;background:#fff;color:#888;font-family:Georgia,serif;font-size:13px;font-weight:700;cursor:pointer;width:100%;}
+.btn-blue{background:#1A4F9C;color:#fff;border:none;border-radius:12px;padding:13px;font-family:Georgia,serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-bottom:8px;}
+/* Alert boxes */
+.err{background:#FBEBE8;border:1px solid #B02E1A;border-radius:8px;padding:10px 14px;font-size:12.5px;color:#6B1A0A;margin-bottom:12px;}
+.info{background:#EBF1FA;border-radius:8px;padding:8px 12px;font-size:12px;color:#1A4F9C;font-weight:600;margin-top:8px;}
+.tip{background:#FEF8E8;border:1px solid #E8C84A;border-radius:8px;padding:9px 13px;font-size:12px;color:#7A5200;margin-bottom:10px;}
+/* Calendar */
+#cal-wrap{background:#fff;border-radius:12px;box-shadow:0 2px 16px rgba(15,28,53,.1);overflow:hidden;margin-bottom:14px;}
+#cal-nav{background:#1B2A4A;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+#cal-nav button{background:transparent;border:none;color:#C49A1E;font-size:24px;cursor:pointer;padding:0 6px;line-height:1;}
+#cal-month{color:#fff;font-family:Georgia,serif;font-size:15px;font-weight:700;}
+#cal-daynames{display:grid;grid-template-columns:repeat(7,1fr);background:#f0f3fa;}
+.cal-dn{text-align:center;padding:6px 0;font-size:10px;font-weight:700;color:#1B2A4A;letter-spacing:1px;}
+#cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#e8eaf0;}
+.cal-cell{background:#fff;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;}
+.cal-cell .cn{font-size:13px;color:#1B2A4A;line-height:1;}
+.cal-cell .cd{width:6px;height:6px;border-radius:50%;background:#1C6E45;margin-top:2px;}
+.cal-cell.today{background:#FFF8E7;}.cal-cell.today .cn{color:#8B6914;}
+.cal-cell.sel{background:#1B2A4A;}.cal-cell.sel .cn{color:#C49A1E;font-weight:700;}
+.cal-cell.inweek{background:#EBF1FA;border-top:1.5px solid #C49A1E;border-bottom:1.5px solid #C49A1E;}
+.cal-cell.inweek .cn{color:#1B2A4A;font-weight:700;}
+.cal-cell.wstart{border-left:2px solid #C49A1E;}
+.cal-cell.wend{border-right:2px solid #C49A1E;}
+.cal-cell.empty{background:#fafafa;cursor:default;}
+/* Stats bar */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;}
+.stat-cell{padding:14px 10px;text-align:center;border-right:1px solid #eee;}
+.stat-cell:last-child{border-right:none;}
+.stat-n{font-size:30px;font-weight:700;font-family:Georgia,serif;line-height:1;}
+.stat-l{font-size:9px;font-weight:700;color:#999;letter-spacing:1px;margin-top:3px;}
+/* Doc buttons */
+.doc-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;}
+.doc-btn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:16px 4px;background:#fff;border:none;border-right:1px solid #eee;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.doc-btn:last-child{border-right:none;}
+.doc-btn .di{font-size:24px;}
+.doc-btn .dl{font-size:10px;font-weight:700;letter-spacing:.3px;}
+/* API key panel */
+#api-panel{background:#0F1C35;padding:12px 14px;border-top:1px solid rgba(196,154,30,.3);}
+#api-panel input{background:rgba(255,255,255,.1);border:1px solid rgba(196,154,30,.5);color:#fff;border-radius:8px;padding:10px 12px;font-size:13px;}
+/* Report preview */
+.rpt-mini-hdr{background:#0F1C35;padding:10px 14px;}
+.rpt-sec-hd{background:#1B2A4A;padding:6px 14px;}
+.rpt-sec-hd span{color:#C49A1E;font-size:10px;font-weight:700;letter-spacing:.5px;}
+.rpt-sec-body{padding:8px 14px;background:#fff;}
+.rpt-sec-body.alt{background:#f8f9fc;}
+.rpt-bullet{display:flex;gap:8px;margin-bottom:5px;font-size:11.5px;color:#1a2a4a;line-height:1.6;}
+/* Full report modal */
+#report-modal{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;background:#0F1C35;}
+#report-modal-hdr{background:#0F1C35;border-bottom:3px solid #C49A1E;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+#report-modal-body{flex:1;overflow-y:auto;background:#fff;}
+#report-modal-footer{background:#0F1C35;border-top:2px solid #C49A1E;padding:10px 16px;display:flex;gap:8px;flex-shrink:0;}
+/* Spinner */
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+/* Day panel */
+.day-panel{background:#fff;border-radius:12px;box-shadow:0 2px 16px rgba(15,28,53,.12);margin-bottom:14px;overflow:hidden;border:2px solid #1B2A4A;}
+.rep-card{border-radius:10px;overflow:hidden;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+/* Week invoice day rows */
+.day-row{border:1px solid #E8E5DF;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:#FAFAF8;}
+.day-row.inactive{opacity:.5;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="hdr">
+    <div id="hdr-logo">👥</div>
+    <div id="hdr-info">
+      <div class="t1">Achieve Together Care</div>
+      <div class="t2">Report &amp; Invoice Generator — Shaun Case</div>
+    </div>
+    <button class="hdr-btn-out" id="key-btn" onclick="toggleApiPanel()">🔑</button>
+    <button class="hdr-btn" id="cal-nav-btn" onclick="showScreen('calendar')">Cal</button>
+    <button class="hdr-btn" id="new-nav-btn" onclick="showScreen('form')">New</button>
+  </div>
+
+  <!-- API KEY PANEL -->
+  <div id="api-panel" class="hidden">
+    <div style="color:#C49A1E;font-size:11px;font-weight:700;margin-bottom:6px;">🔑 Anthropic API Key — saved permanently</div>
+    <div style="display:flex;gap:8px;">
+      <input type="password" id="api-key-input" placeholder="sk-ant-..." style="flex:1;">
+      <button onclick="saveApiKey()" style="background:#C49A1E;color:#0F1C35;border:none;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer;">Save</button>
+    </div>
+    <div id="api-status" style="color:rgba(255,255,255,.5);font-size:10px;margin-top:5px;"></div>
+  </div>
+
+  <!-- CALENDAR SCREEN -->
+  <div id="screen-calendar" class="screen active">
+
+    <!-- Stats card -->
+    <div class="card" style="margin-bottom:12px;">
+      <div style="background:#1B2A4A;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="color:#fff;font-family:Georgia,serif;font-size:14px;font-weight:700;">Achieve Together Care</div>
+          <div style="color:#C49A1E;font-size:10px;margin-top:1px;">Document Calendar</div>
+        </div>
+        <div style="background:rgba(255,255,255,.1);border:1px solid #C49A1E;border-radius:8px;padding:6px 12px;text-align:right;">
+          <div style="color:#fff;font-weight:700;font-size:12px;font-family:Georgia,serif;">Shaun Case</div>
+          <div style="color:#C49A1E;font-size:9px;margin-top:1px;">NDIS #432005774</div>
+        </div>
+      </div>
+      <div style="padding:8px 16px;background:#f8f9fc;display:flex;gap:16px;border-bottom:1px solid #eee;">
+        <span style="font-size:10px;color:#1A4F9C;font-weight:700;">■ Shift</span>
+        <span style="font-size:10px;color:#1C6E45;font-weight:700;">■ Weekly</span>
+        <span style="font-size:10px;color:#B02E1A;font-weight:700;">■ Incident</span>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-cell"><div class="stat-n" style="color:#1A4F9C;" id="cnt-shift">0</div><div class="stat-l">SHIFT REPORTS</div></div>
+        <div class="stat-cell"><div class="stat-n" style="color:#1C6E45;" id="cnt-weekly">0</div><div class="stat-l">WEEKLY REPORTS</div></div>
+        <div class="stat-cell"><div class="stat-n" style="color:#B02E1A;" id="cnt-incident">0</div><div class="stat-l">INCIDENT REPORTS</div></div>
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:#888;margin-bottom:10px;text-align:center;">Tap any date — goes straight to form, or shows saved reports</div>
+
+    <!-- Calendar -->
+    <div id="cal-wrap">
+      <div id="cal-nav">
+        <button onclick="calPrev()">&#8249;</button>
+        <div id="cal-month">March 2026</div>
+        <button onclick="calNext()">&#8250;</button>
+      </div>
+      <div id="cal-daynames">
+        <div class="cal-dn">Sun</div><div class="cal-dn">Mon</div><div class="cal-dn">Tue</div>
+        <div class="cal-dn">Wed</div><div class="cal-dn">Thu</div><div class="cal-dn">Fri</div><div class="cal-dn">Sat</div>
+      </div>
+      <div id="cal-grid"></div>
+      <div style="padding:8px 14px;background:#f8f9fc;display:flex;gap:16px;font-size:10px;color:#666;">
+        <span>● dot = report saved</span>
+        <span style="color:#C49A1E;font-weight:700;">highlighted = selected week</span>
+      </div>
+    </div>
+
+    <!-- Day panel (shown when date selected) -->
+    <div id="day-panel" class="hidden"></div>
+
+    <!-- New Document buttons -->
+    <div class="card" style="margin-top:8px;">
+      <div style="background:#1B2A4A;padding:8px 14px;">
+        <div style="color:#C49A1E;font-size:10px;font-weight:700;letter-spacing:1px;">NEW DOCUMENT</div>
+        <div style="color:rgba(255,255,255,.55);font-size:9px;margin-top:1px;" id="new-doc-hint">Tap a date first</div>
+      </div>
+      <div class="doc-grid">
+        <button class="doc-btn" onclick="newDoc('shift')"><span class="di">📋</span><span class="dl" style="color:#1A4F9C;">Shift</span></button>
+        <button class="doc-btn" onclick="newDoc('weekly')"><span class="di">📆</span><span class="dl" style="color:#1C6E45;">Weekly</span></button>
+        <button class="doc-btn" onclick="newDoc('incident')"><span class="di">🚨</span><span class="dl" style="color:#B02E1A;">Incident</span></button>
+        <button class="doc-btn" onclick="newDoc('invoice')"><span class="di">🧾</span><span class="dl" style="color:#5B2D8E;">Invoice</span></button>
+      </div>
+    </div>
+
+    <!-- Drive/Cal links -->
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <a href="https://drive.google.com/drive/folders/1nuJWuqK0UGMCcHsS9TSviIEvVpE0D6yN" target="_blank" class="btn-green" style="flex:1;">☁️ Drive</a>
+      <a href="https://sites.google.com/achievetogethercare.com/atcdocumentcalendar/home" target="_blank" class="btn-gold" style="flex:1;">📅 Calendar</a>
+    </div>
+  </div>
+
+  <!-- FORM SCREEN -->
+  <div id="screen-form" class="screen">
+    <div class="pills" id="type-pills">
+      <button class="pill active-shift" onclick="setType('shift')" id="pill-shift">📋 Shift</button>
+      <button class="pill" onclick="setType('weekly')" id="pill-weekly">📆 Weekly</button>
+      <button class="pill" onclick="setType('incident')" id="pill-incident">🚨 Incident</button>
+      <button class="pill" onclick="setType('invoice')" id="pill-invoice">🧾 Invoice</button>
+    </div>
+
+    <!-- SHIFT / WEEKLY / INCIDENT form -->
+    <div id="form-report">
+      <div class="card">
+        <div class="card-h" id="form-card-title">Shift Details</div>
+        <div class="card-b">
+          <div class="g3" style="margin-bottom:12px;">
+            <div><label class="lbl">Date</label><input type="date" id="f-date"></div>
+            <div><label class="lbl">Start</label><input type="time" id="f-start" value="09:00" onchange="updateHrs()"></div>
+            <div><label class="lbl">Finish</label><input type="time" id="f-end" value="15:00" onchange="updateHrs()"></div>
+          </div>
+          <div class="g2" style="margin-bottom:8px;">
+            <div><label class="lbl">Kilometres</label><input type="number" id="f-km" value="45"></div>
+            <div id="inc-type-wrap" class="hidden"><label class="lbl">Incident Type</label>
+              <select id="f-inc-type">
+                <option>Behavioural / Emotional Escalation</option>
+                <option>Behavioural / Safety Incident</option>
+                <option>Significant Behavioural Incident</option>
+                <option>Housing / Accommodation Crisis</option>
+                <option>Medical Incident</option>
+              </select>
+            </div>
+          </div>
+          <div id="hrs-badge" class="info hidden"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h">What Happened — Write Freely</div>
+        <div class="card-b">
+          <div class="tip">Example: "centrelink visit, shaun anxious about housing, beach walk, mood improved"</div>
+          <textarea id="f-notes" placeholder="Just write what happened in plain English — AI writes the full professional report..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVOICE form -->
+    <div id="form-invoice" class="hidden">
+      <!-- Invoice mode pills -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button id="inv-mode-weekly" onclick="setInvMode('weekly')" style="flex:1;padding:10px;border-radius:8px;border:2px solid #5B2D8E;background:#F0EBF8;color:#5B2D8E;font-weight:700;cursor:pointer;font-size:13px;">📆 Weekly Invoice</button>
+        <button id="inv-mode-single" onclick="setInvMode('single')" style="flex:1;padding:10px;border-radius:8px;border:2px solid #ddd;background:#fff;color:#888;font-weight:700;cursor:pointer;font-size:13px;">📋 Single Shift</button>
+      </div>
+
+      <!-- Weekly invoice form -->
+      <div id="inv-weekly-form">
+        <div class="card">
+          <div class="card-h">Invoice Details</div>
+          <div class="card-b">
+            <div class="g2" style="margin-bottom:10px;">
+              <div><label class="lbl">Invoice No</label><input type="text" id="wi-num" value="INV-001"></div>
+              <div><label class="lbl">Invoice Date</label><input type="date" id="wi-date"></div>
+            </div>
+            <div><label class="lbl">Period</label><input type="text" id="wi-period" placeholder="e.g. 2–6 March 2026"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h">Shift Days</div>
+          <div class="card-b" id="week-days-list"></div>
+          <div style="padding:0 16px 14px;">
+            <button onclick="addWeekDay()" style="width:100%;padding:10px;border:2px dashed #C49A1E;border-radius:8px;background:transparent;color:#C49A1E;font-weight:700;cursor:pointer;font-size:13px;">+ Add Day</button>
+          </div>
+        </div>
+        <div class="card" id="week-totals-card">
+          <div class="card-h">Totals Preview</div>
+          <div class="card-b" id="week-totals"></div>
+        </div>
+      </div>
+
+      <!-- Single invoice form -->
+      <div id="inv-single-form" class="hidden">
+        <div class="card">
+          <div class="card-h">Invoice Details</div>
+          <div class="card-b">
+            <div class="g2" style="margin-bottom:10px;">
+              <div><label class="lbl">Invoice No</label><input type="text" id="si-num" value="INV-001"></div>
+              <div><label class="lbl">Invoice Date</label><input type="date" id="si-date"></div>
+            </div>
+            <div class="g3" style="margin-bottom:10px;">
+              <div><label class="lbl">Service Date</label><input type="date" id="si-sdate"></div>
+              <div><label class="lbl">Start</label><input type="time" id="si-start" value="09:00"></div>
+              <div><label class="lbl">Finish</label><input type="time" id="si-end" value="15:00"></div>
+            </div>
+            <div class="g2">
+              <div><label class="lbl">Kilometres</label><input type="number" id="si-km" value="45"></div>
+              <div><label class="lbl">Line Item</label>
+                <select id="si-item">
+                  <option value="09">09 — Community Participation ($105.43/hr)</option>
+                  <option value="08">08 — Accommodation/Tenancy ($99.72/hr)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div id="form-err" class="err hidden"></div>
+
+    <!-- Type badge -->
+    <div id="type-badge" style="background:#EBF1FA;border:1.5px solid #1A4F9C;border-radius:8px;padding:8px 14px;font-size:12px;color:#1A4F9C;font-weight:700;margin-bottom:10px;text-align:center;">📋 Daily Shift Report</div>
+
+    <!-- Generate button -->
+    <button class="btn-gen" id="gen-btn" style="background:#1A4F9C;" onclick="generate()">📋 Generate Daily Shift Report + PDF</button>
+
+    <!-- Result area -->
+    <div id="result-area" class="hidden">
+      <div class="card">
+        <div style="background:#1C6E45;padding:14px 18px;display:flex;align-items:center;gap:12px;">
+          <div style="font-size:26px;">✅</div>
+          <div>
+            <div style="font-family:Georgia,serif;font-size:14px;color:#fff;font-weight:700;">Done!</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:1px;" id="result-filename"></div>
+          </div>
+        </div>
+
+        <!-- AI Report preview -->
+        <div id="report-preview-wrap" style="padding:12px 14px 0;">
+          <div style="font-size:10px;font-weight:700;color:#1B2A4A;margin-bottom:8px;text-transform:uppercase;letter-spacing:.6px;">Report Preview</div>
+          <div style="border:1px solid #dde3f0;border-radius:8px;overflow:hidden;max-height:480px;overflow-y:auto;">
+            <!-- mini header -->
+            <div class="rpt-mini-hdr" style="display:flex;justify-content:space-between;align-items:center;">
+              <div><div style="color:#C49A1E;font-family:Georgia,serif;font-size:13px;font-weight:700;">Achieve Together Care</div><div style="color:rgba(255,255,255,.4);font-size:9px;">NDIS Disability Services</div></div>
+              <div style="text-align:right;"><div style="color:#fff;font-size:9px;">Shaun Case</div><div style="color:#C49A1E;font-size:8px;">NDIS 432005774</div></div>
+            </div>
+            <!-- details grid -->
+            <div id="preview-details" style="background:#f5f7fc;border-bottom:1px solid #dde3f0;padding:8px 14px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;"></div>
+            <!-- sections -->
+            <div id="preview-sections"></div>
+            <!-- footer -->
+            <div style="border-top:1px solid #dde3f0;padding:6px 14px;display:flex;justify-content:space-between;">
+              <span style="font-size:8px;color:#999;">Achieve Together Care · CONFIDENTIAL</span>
+              <span style="font-size:8px;color:#999;" id="preview-date"></span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:12px 14px 16px;display:flex;flex-direction:column;gap:8px;">
+          <button class="btn-blue" onclick="viewFullReport()">🔍 View Full ATC Report</button>
+          <button class="btn-dl" id="dl-btn" onclick="reDownload()">⬇️ Download PDF Again</button>
+          <a href="https://drive.google.com/drive/folders/1nuJWuqK0UGMCcHsS9TSviIEvVpE0D6yN" target="_blank" class="btn-green">☁️ Upload to Google Drive</a>
+          <a href="https://sites.google.com/achievetogethercare.com/atcdocumentcalendar/home" target="_blank" class="btn-gold">📅 Open ATC Document Calendar</a>
+          <button class="btn-gold" id="view-cal-btn" onclick="viewOnCal()">📅 View on Calendar</button>
+          <button class="btn-outline" onclick="resetForm()">✍️ New Report</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL REPORT MODAL -->
+  <div id="report-modal" class="hidden">
+    <div id="report-modal-hdr">
+      <div>
+        <div style="color:#C49A1E;font-weight:700;font-size:14px;font-family:Georgia,serif;">ATC — View Report</div>
+        <div style="color:rgba(255,255,255,.5);font-size:10px;margin-top:1px;" id="modal-filename"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="modalDownload()" style="background:#C49A1E;color:#0F1C35;border:none;border-radius:8px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;">⬇️ PDF</button>
+        <button onclick="closeModal()" style="background:transparent;border:1.5px solid rgba(255,255,255,.3);color:#fff;padding:9px 12px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">✕</button>
+      </div>
+    </div>
+    <div id="report-modal-body"></div>
+    <div id="report-modal-footer">
+      <a href="https://drive.google.com/drive/folders/1nuJWuqK0UGMCcHsS9TSviIEvVpE0D6yN" target="_blank" class="btn-green" style="flex:1;margin:0;">☁️ Drive</a>
+      <a href="https://sites.google.com/achievetogethercare.com/atcdocumentcalendar/home" target="_blank" class="btn-gold" style="flex:1;margin:0;">📅 Calendar</a>
+    </div>
+  </div>
+
+</div>
+<script>
+
+// ═══════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════
+const NAVY="#1B2A4A",NAVYD="#0F1C35",GOLD="#C49A1E",BLUE="#1A4F9C",GREEN="#1C6E45",RED="#B02E1A",PURPLE="#5B2D8E";
+const cn=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DRIVE_URL="https://drive.google.com/drive/folders/1nuJWuqK0UGMCcHsS9TSviIEvVpE0D6yN";
+const CAL_URL="https://sites.google.com/achievetogethercare.com/atcdocumentcalendar/home";
+const KM_RATE=0.99;
+const ITEMS={'09':{code:'09_011_0125_6_3',desc:'Increased Social & Community Participation — CB Supports',rate:105.43},'08':{code:'08_001_0105_2_3',desc:'Assistance with Accommodation/Tenancy Obligations — CB Supports',rate:99.72}};
+
+// ═══════════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════════
+let STORE={};
+try{const s=localStorage.getItem('atc_reports');if(s)STORE=JSON.parse(s);}catch(e){}
+function saveRep(date,entry){if(!STORE[date])STORE[date]=[];STORE[date].push(entry);try{localStorage.setItem('atc_reports',JSON.stringify(STORE));}catch(e){}}
+function getReps(date){return STORE[date]||[];}
+function hasReps(date){return !!(STORE[date]&&STORE[date].length);}
+function countType(t){return Object.values(STORE).flat().filter(r=>r.type===t).length;}
+
+// ═══════════════════════════════════════════════════════════
+// API KEY
+// ═══════════════════════════════════════════════════════════
+let apiKey=localStorage.getItem('atc_api_key')||'';
+function toggleApiPanel(){
+  const p=document.getElementById('api-panel');
+  p.classList.toggle('hidden');
+  if(!p.classList.contains('hidden')){
+    const inp=document.getElementById('api-key-input');
+    inp.value=apiKey?'sk-ant-...saved':'';
+    document.getElementById('api-status').textContent=apiKey?'✅ Key saved — tap Save to update':'No key saved yet';
+  }
+}
+function saveApiKey(){
+  const v=document.getElementById('api-key-input').value.trim();
+  if(v&&v!=='sk-ant-...saved'){apiKey=v;localStorage.setItem('atc_api_key',v);}
+  document.getElementById('api-status').textContent='✅ Key saved!';
+  setTimeout(()=>document.getElementById('api-panel').classList.add('hidden'),800);
+}
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function calcHrs(s,e){try{const a=new Date('2000-01-01T'+s),b=new Date('2000-01-01T'+e);const h=(b-a)/3600000;return h>0?+h.toFixed(2):0;}catch{return 0;}}
+function fmtDateLong(d){try{return new Date(d+'T12:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch{return d;}}
+function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
+function getWeekRange(dateStr){const d=new Date(dateStr+'T12:00:00');const dow=d.getDay();const mon=new Date(d);mon.setDate(d.getDate()-(dow===0?6:dow-1));const sun=new Date(mon);sun.setDate(mon.getDate()+6);const fmt=n=>n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');return{mon:fmt(mon),sun:fmt(sun)};}
+function inWeek(dateStr,anchorStr){if(!anchorStr)return false;const{mon,sun}=getWeekRange(anchorStr);return dateStr>=mon&&dateStr<=sun;}
+function androidDownload(dataUri,fileName){try{const a=document.createElement('a');a.href=dataUri;a.download=fileName||'document.pdf';a.style.cssText='position:fixed;opacity:0;top:0;left:0';document.body.appendChild(a);a.click();setTimeout(()=>{try{document.body.removeChild(a);}catch(e){}},500);}catch(e){window.open(dataUri,'_blank');}}
+
+// ═══════════════════════════════════════════════════════════
+// PDF FUNCTIONS (extracted from React source)
+// ═══════════════════════════════════════════════════════════
+// PDF loader
+async function loadPDF(){
+  if(window.jspdf)return window.jspdf.jsPDF;
+  await new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=ok;s.onerror=no;document.head.appendChild(s);});
+  return window.jspdf.jsPDF;
+}
+
+function addChrome(doc,title,sub,W,H,M,CW,pg){
+  const[nr,ng,nb]=cn(NAVY),[gr,gg,gb]=cn(GOLD),d=[85,85,85];
+  doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(nr,ng,nb);doc.text('Achieve Together Care',M,14.5);
+  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...d);
+  doc.text('NDIS Disability Services  ·  Empowering Lives, Achieving Together',M,20.5);
+  doc.text('(02) 49 718',W-M,14.5,{align:'right'});doc.text('info@achievetogethercare.com.au',W-M,19,{align:'right'});doc.text('admin@achievetogethercare.com.au',W-M,23.5,{align:'right'});
+  doc.setDrawColor(gr,gg,gb);doc.setLineWidth(0.7);doc.line(M,26.5,W-M,26.5);
+  doc.setFillColor(nr,ng,nb);doc.rect(M,28,CW,9.5,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(255,255,255);doc.text(title.toUpperCase(),W/2,34.5,{align:'center'});
+  doc.setDrawColor(gr,gg,gb);doc.setLineWidth(0.4);doc.line(M,H-15,W-M,H-15);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...d);
+  doc.text('Achieve Together Care  ·  '+sub+'  ·  CONFIDENTIAL',M,H-11);doc.text('Page '+pg,W-M,H-11,{align:'right'});
+}
+
+// ── WEEKLY INVOICE ────────────────────────────────────────────────────────────
+async function makeWeeklyInvoice({invNum,invDate,period,days,lineItem,bankName,bsb,accNum,abn}){
+  const jsPDF=await loadPDF();
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,H=297,M=14,CW=W-M*2;
+  const[nr,ng,nb]=cn(NAVY),[lr,lg,lb]=[220,225,240],[or,og,ob]=[245,247,252],[dr,dg,db]=[100,100,100];
+  const[br,bg,bb]=cn(BLUE);
+
+  // Day-of-week rate logic matching real invoice
+  const RATES={
+    weekday:{desc:'Access Community Social & Rec Activ — Weekday',code:'04_104_0125_6_1',rate:70.23},
+    saturday:{desc:'Access Community Social & Rec Activ — Saturday',code:'04_105_0125_6_1',rate:98.83},
+    sunday:{desc:'Access Community Social & Rec Activ — Sunday',code:'04_106_0125_6_1',rate:127.43},
+    pubhol:{desc:'Access Community Social & Rec Activ — Public Holiday',code:'04_102_0125_6_1',rate:156.03},
+  };
+  const TRANSPORT={desc:'Activity Based Transport — Non-Labour Costs',code:'04_590_0125_6_1',rate:0.97};
+  const PROVTRAVEL={desc:'Provider Travel — Non-Labour Costs',code:'04_799_0125_6_1',rate:70.23,qty:0.25};
+  const getDayRate=(dateStr)=>{
+    const dow=new Date(dateStr+'T12:00:00').getDay();
+    if(dow===0)return RATES.sunday;
+    if(dow===6)return RATES.saturday;
+    return RATES.weekday;
+  };
+
+  let pg=0;
+  const np=()=>{
+    if(pg>0)doc.addPage();
+    pg++;
+    // ── Header ──
+    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(nr,ng,nb);
+    doc.text('ACHIEVE TOGETHER CARE',M,18);
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(dr,dg,db);
+    doc.text('Tax Invoice',W-M,18,{align:'right'});
+    doc.setDrawColor(nr,ng,nb);doc.setLineWidth(0.6);doc.line(M,21,W-M,21);
+  };
+  np();
+
+  // ── Two-column top section ──
+  let y=27;
+  const leftX=M, rightX=W/2+4, colW=(W/2)-M-4;
+
+  // Left: INVOICE DETAILS box
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(br,bg,bb);
+  doc.text('INVOICE DETAILS',leftX,y);y+=3;
+  const iRows=[['Invoice No',invNum],['Date',invDate],['Period',period],['Client','Shaun Case NDIS: 432005774'],['Worker','Daniel Hayward']];
+  iRows.forEach(([l,v],i)=>{
+    const ry=y+(i*7);
+    doc.setFillColor(...(i%2===0?[or,og,ob]:[255,255,255]));
+    doc.rect(leftX,ry,colW,7,'F');
+    doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.2);doc.rect(leftX,ry,colW,7,'S');
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(nr,ng,nb);doc.text(l,leftX+2,ry+4.8);
+    doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);doc.text(String(v),leftX+28,ry+4.8,{maxWidth:colW-30});
+  });
+
+  // Right: NDIS PRICE LIMITS table
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(br,bg,bb);
+  doc.text('NDIS PRICE LIMITS USED — Category 04 (0125)',rightX,y);y+=3;
+  const pRows=[
+    ['Support Type','Code','Rate'],
+    ['Weekday Daytime','04_104_0125_6_1','$70.23'],
+    ['Saturday','04_105_0125_6_1','$98.83'],
+    ['Sunday','04_106_0125_6_1','$127.43'],
+    ['Public Holiday','04_102_0125_6_1','$156.03'],
+    ['Activity Based Transport','04_590_0125_6_1','$0.97/km'],
+    ['Provider Travel (non-labour)','04_799_0125_6_1','$1.00/km'],
+  ];
+  const pc=[42,38,14]; // col widths inside right col
+  pRows.forEach(([a,b2,c2],i)=>{
+    const ry=y+(i*7);
+    const isHead=i===0;
+    doc.setFillColor(...(isHead?[nr,ng,nb]:i%2===0?[or,og,ob]:[255,255,255]));
+    doc.rect(rightX,ry,colW,7,'F');
+    doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.2);doc.rect(rightX,ry,colW,7,'S');
+    doc.setFont('helvetica',isHead?'bold':'normal');doc.setFontSize(7);
+    doc.setTextColor(...(isHead?[255,255,255]:[0,0,0]));
+    doc.text(a,rightX+2,ry+4.8,{maxWidth:pc[0]-2});
+    doc.text(b2,rightX+pc[0]+1,ry+4.8,{maxWidth:pc[1]-2});
+    doc.text(c2,rightX+pc[0]+pc[1]+1,ry+4.8,{maxWidth:pc[2]-1});
+  });
+
+  y+=iRows.length*7+6;
+
+  // ── SERVICE DETAILS heading ──
+  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(br,bg,bb);
+  doc.text('SERVICE DETAILS',M,y);y+=3;
+
+  // Table header row
+  const cw2={date:30,desc:72,code:30,qty:14,rate:16,total:CW-30-72-30-14-16};
+  doc.setFillColor(nr,ng,nb);doc.rect(M,y,CW,7,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(255,255,255);
+  let cx=M+2;
+  [['Date',cw2.date],['Description',cw2.desc],['NDIS Code',cw2.code],['Qty',cw2.qty],['Rate',cw2.rate],['Total',cw2.total]].forEach(([t,w])=>{doc.text(t,cx,y+5);cx+=w;});
+  y+=7;
+
+  const tr=(dateLabel,desc,code,qty,rate,total,shade)=>{
+    if(y+8>H-30){np();y=27;
+      doc.setFillColor(nr,ng,nb);doc.rect(M,y,CW,7,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(255,255,255);
+      let cx2=M+2;
+      [['Date',cw2.date],['Description',cw2.desc],['NDIS Code',cw2.code],['Qty',cw2.qty],['Rate',cw2.rate],['Total',cw2.total]].forEach(([t,w])=>{doc.text(t,cx2,y+5);cx2+=w;});
+      y+=7;
+    }
+    doc.setFillColor(...(shade?[248,249,253]:[255,255,255]));
+    doc.rect(M,y,CW,7.5,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.15);doc.rect(M,y,CW,7.5,'S');
+    doc.setFont('helvetica','normal');doc.setFontSize(7.2);doc.setTextColor(0,0,0);
+    let x=M+2;
+    [[dateLabel,cw2.date],[desc,cw2.desc],[code,cw2.code],[qty,cw2.qty],[rate,cw2.rate],[total,cw2.total]].forEach(([v,w])=>{
+      doc.text(String(v||''),x,y+5,{maxWidth:w-2});x+=w;
+    });
+    y+=7.5;
+  };
+
+  let totalSupHrs=0,totalSupAmt=0,totalKm=0,totalKmAmt=0,totalTravelAmt=0,shade=false;
+  const PTRAVEL_RATE=1.00,PTRAVEL_QTY=0.25;
+
+  days.filter(d=>d.active&&calcHrs(d.start,d.end)>0).forEach(d=>{
+    const h=parseFloat(calcHrs(d.start,d.end));
+    const k=parseFloat(d.km)||0;
+    const dr2=getDayRate(d.date);
+    const suppAmt=+(h*dr2.rate).toFixed(2);
+    const kmAmt=+(k*TRANSPORT.rate).toFixed(2);
+    const travelAmt=+(PTRAVEL_QTY*PTRAVEL_RATE).toFixed(2);
+    totalSupHrs+=h; totalSupAmt+=suppAmt;
+    totalKm+=k; totalKmAmt+=kmAmt;
+    totalTravelAmt+=travelAmt;
+    const dlabel=new Date(d.date+'T12:00:00').toLocaleDateString('en-AU',{day:'2-digit',month:'2-digit',year:'numeric'})
+      +' ('+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(d.date+'T12:00:00').getDay()]+')';
+    tr(dlabel,dr2.desc,dr2.code,h.toFixed(1)+' h','$'+dr2.rate.toFixed(2),'$'+suppAmt.toFixed(2),shade);
+    if(k>0) tr('',TRANSPORT.desc,TRANSPORT.code,k+' km','$'+TRANSPORT.rate.toFixed(2),'$'+kmAmt.toFixed(2),shade);
+    tr('',PROVTRAVEL.desc,PROVTRAVEL.code,PTRAVEL_QTY+' h','$'+PTRAVEL_RATE.toFixed(2),'$'+travelAmt.toFixed(2),shade);
+    shade=!shade;
+  });
+
+  y+=4;
+  // ── Totals ──
+  const grandTotal=+(totalSupAmt+totalKmAmt+totalTravelAmt).toFixed(2);
+  const totRows=[
+    ['Total Support Hours ('+totalSupHrs.toFixed(1)+' h)','$'+totalSupAmt.toFixed(2),false],
+    ['Total Transport ('+totalKm+' km)','$'+totalKmAmt.toFixed(2),false],
+    ['Total Provider Travel ('+((days.filter(d=>d.active&&calcHrs(d.start,d.end)>0).length)*PTRAVEL_QTY).toFixed(1)+' h)','$'+totalTravelAmt.toFixed(2),false],
+    ['TOTAL PAYABLE','$'+grandTotal.toFixed(2),true],
+  ];
+  totRows.forEach(([l,v,bold])=>{
+    if(y+8>H-30){np();y=27;}
+    doc.setFillColor(...(bold?[nr,ng,nb]:[255,255,255]));
+    doc.rect(M,y,CW,8,'F');
+    doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.3);doc.rect(M,y,CW,8,'S');
+    doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(bold?9:8);
+    doc.setTextColor(...(bold?[255,255,255]:[0,0,0]));
+    doc.text(l,M+3,y+5.5);
+    doc.text(v,W-M-3,y+5.5,{align:'right'});
+    y+=8;
+  });
+
+  y+=8;
+  // ── PAYMENT DETAILS ──
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(br,bg,bb);
+  doc.text('PAYMENT DETAILS',W/2,y,{align:'center'});y+=4;
+  const payRows=[
+    ['Account Name:','Achieve Together Care'],
+    ['BSB:','067-873'],
+    ['Account Number:','207-436-73'],
+    ['ABN:','68 493 366 184'],
+  ];
+  const pw=120,px=(W-pw)/2;
+  payRows.forEach(([l,v],i)=>{
+    doc.setFillColor(...(i%2===0?[or,og,ob]:[255,255,255]));
+    doc.rect(px,y,pw,7,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.2);doc.rect(px,y,pw,7,'S');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(nr,ng,nb);doc.text(l,px+3,y+4.8);
+    doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);doc.text(v,px+42,y+4.8);
+    y+=7;
+  });
+
+  y+=10;
+  doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.3);doc.line(M,y,W-M,y);y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(dr,dg,db);
+  doc.text('Confidential Support Document • Thank you for your business',W/2,y,{align:'center'});
+
+  const fileName='Invoice_'+invNum+'_ShaunCase_'+period.replace(/\s/g,'_').replace(/[^a-zA-Z0-9_]/g,'')+'.pdf';
+  const dataUri=doc.output('datauristring');
+  doc.save(fileName);
+  return{fileName,dataUri,grandTotal};
+}
+
+// ── SINGLE SHIFT INVOICE ──────────────────────────────────────────────────────
+async function makeSingleInvoice({invNum,invDate,dateFmt,date,start,end,hrs,km,lineItem,bankName,bsb,accNum,abn}){
+  const jsPDF=await loadPDF();
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,H=297,M=18,CW=W-M*2;
+  const[nr,ng,nb]=cn(NAVY),[lr,lg,lb]=[232,229,223],[or,og,ob]=[244,244,241],[dr,dg,db]=[85,85,85];
+  const li=ITEMS[lineItem]||ITEMS['09'];
+  const h=parseFloat(hrs)||0,k=parseFloat(km)||0;
+  const suppAmt=+(h*li.rate).toFixed(2),kmAmt=+(k*KM_RATE).toFixed(2),total=(suppAmt+kmAmt).toFixed(2);
+  let pg=0;
+  const np=()=>{if(pg>0)doc.addPage();pg++;addChrome(doc,'TAX INVOICE — '+invNum,'Tax Invoice',W,H,M,CW,pg);};
+  np();let y=42;
+  const ck=(n=10)=>{if(y+n>H-20){np();y=42;}};
+  const sh=(t)=>{ck(10);doc.setFillColor(nr,ng,nb);doc.rect(M,y,CW,7,'F');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);doc.text(t,M+5,y+5);y+=8;};
+  const fr=(l,v,lw=58)=>{ck(8);doc.setFillColor(or,og,ob);doc.rect(M,y,lw,7,'F');doc.setFillColor(255,255,255);doc.rect(M+lw,y,CW-lw,7,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.3);doc.rect(M,y,CW,7,'S');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(nr,ng,nb);doc.text(l,M+3,y+5);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);doc.text(String(v||'—'),M+lw+3,y+5,{maxWidth:CW-lw-6});y+=7;};
+  sh('INVOICE DETAILS');fr('Invoice Number:',invNum);fr('Invoice Date:',invDate);fr('Service Date:',dateFmt+' ('+start+' – '+end+')');fr('Provider Name:','Achieve Together Care');fr('Provider ABN:',abn||'[ADD ABN]');y+=4;
+  sh('PARTICIPANT DETAILS');fr('Participant:','Shaun Case');fr('NDIS Number:','432005774');fr('Plan Manager:','Plan Partners — ISCP Plan Management');fr('Support Coordinator:','Rachel Hanson');fr('Support Worker:','Daniel Hayward');y+=4;
+  sh('SUPPORT ITEMS CLAIMED');y+=1;
+  const cw={d:72,c:40,q:13,u:14,r:24};const aw=CW-cw.d-cw.c-cw.q-cw.u-cw.r;
+  doc.setFillColor(nr,ng,nb);doc.rect(M,y,CW,8,'F');doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(255,255,255);
+  let cx=M+2;[['Description',cw.d],['Code',cw.c],['Qty',cw.q],['Unit',cw.u],['Rate',cw.r],['Amount',aw]].forEach(([t,w])=>{doc.text(t,cx,y+5.5);cx+=w;});y+=8;
+  const tr=(d,c,q,u,r,a,bg=[255,255,255])=>{ck(9);doc.setFillColor(...bg);doc.rect(M,y,CW,8,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.25);doc.rect(M,y,CW,8,'S');doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(0,0,0);let x=M+2;[[d,cw.d],[c,cw.c],[q,cw.q],[u,cw.u],[r,cw.r],[a,aw]].forEach(([v,w])=>{doc.text(String(v),x,y+5.5,{maxWidth:w-3});x+=w;});y+=8;};
+  tr(li.desc,li.code,h.toFixed(1),'hrs','$'+li.rate.toFixed(2),'$'+suppAmt.toFixed(2),[248,248,252]);
+  if(k>0)tr('Activity Based Transport','NDIS s4.4',k.toFixed(1),'km','$'+KM_RATE.toFixed(2),'$'+kmAmt.toFixed(2));
+  y+=4;
+  const tw=85,tx=M+CW-tw;
+  [['Subtotal','$'+total,false],['GST','GST-Free (s38-38)',false],['TOTAL DUE','$'+total,true]].forEach(([l,v,b])=>{ck(8);doc.setFillColor(...(b?[nr,ng,nb]:[255,255,255]));doc.rect(tx,y,tw,8,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.3);doc.rect(tx,y,tw,8,'S');doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(9);doc.setTextColor(...(b?[255,255,255]:[0,0,0]));doc.text(l,tx+3,y+5.5);doc.text(v,tx+tw-3,y+5.5,{align:'right'});y+=8;});
+  y+=5;
+  sh('PAYMENT DETAILS — PLEASE REMIT TO');fr('Account Name:',bankName||'[Account Name]');fr('BSB:',bsb||'[BSB]');fr('Account Number:',accNum||'[Account Number]');fr('ABN:',abn||'[ABN]');fr('Reference:',invNum+' / Shaun Case / 432005774');fr('Send To:','Plan Partners — ISCP Plan Management');
+  const fileName='Invoice_'+invNum+'_'+date.replace(/-/g,'_')+'_ShaunCase.pdf';
+  const dataUri=doc.output('datauristring');
+  doc.save(fileName);
+  return{fileName,dataUri};
+}
+
+// ── REPORT PDF ────────────────────────────────────────────────────────────────
+async function makeReport(type,dateFmt,date,start,end,hrs,km,incType,ai){
+  const jsPDF=await loadPDF();
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,H=297,M=18,CW=W-M*2;
+  const[nr,ng,nb]=cn(NAVY),[lr,lg2,lb]=[232,229,223],[or,og,ob]=[244,244,241];
+  const TL={shift:'Daily Shift Report',weekly:'Weekly Support Report',incident:'Incident Report'};
+  const rtype=TL[type];
+  let pg=0;
+  const np=()=>{if(pg>0)doc.addPage();pg++;addChrome(doc,rtype.toUpperCase()+' — '+dateFmt,rtype,W,H,M,CW,pg);};
+  np();let y=42;
+  const ck=(n=10)=>{if(y+n>H-20){np();y=42;}};
+  const sh=(t)=>{ck(10);doc.setFillColor(nr,ng,nb);doc.rect(M,y,CW,7,'F');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);doc.text(t,M+5,y+5);y+=8;};
+  const fr=(l,v,lw=55)=>{ck(8);doc.setFillColor(or,og,ob);doc.rect(M,y,lw,7,'F');doc.setFillColor(255,255,255);doc.rect(M+lw,y,CW-lw,7,'F');doc.setDrawColor(lr,lg2,lb);doc.setLineWidth(0.3);doc.rect(M,y,CW,7,'S');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(nr,ng,nb);doc.text(l,M+3,y+5);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);doc.text(String(v||'—'),M+lw+3,y+5,{maxWidth:CW-lw-6});y+=7;};
+  const cb=(label,lines)=>{
+    ck(14);doc.setFillColor(or,og,ob);doc.rect(M,y,CW,7,'F');doc.setDrawColor(lr,lg2,lb);doc.setLineWidth(0.3);doc.rect(M,y,CW,7,'S');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(nr,ng,nb);doc.text(label,M+5,y+5);y+=7;
+    lines.forEach(raw=>{const t=raw.trim().replace(/^[-•*]\s*/,'').trim();if(!t)return;const wrapped=doc.splitTextToSize('• '+t,CW-14);const bh=wrapped.length*5.5+4;ck(bh);doc.setFillColor(255,255,255);doc.rect(M,y,CW,bh,'F');doc.setDrawColor(lr,lg2,lb);doc.setLineWidth(0.2);doc.rect(M,y,CW,bh,'S');doc.setFont('helvetica','normal');doc.setFontSize(8.8);doc.setTextColor(0,0,0);wrapped.forEach((wl,wi)=>doc.text(wl,M+8,y+4+(wi*5.5)));y+=bh;});y+=2;
+  };
+  const parse=(txt)=>{const s={};let cur=null,lines=[];txt.split('\n').forEach(l=>{const m=l.match(/^[\*#\s]*(\d+[\.\)]\s+[A-Z][A-Z\s&\/]+?)[\*#\s]*$/);if(m){if(cur)s[cur]=lines;cur=m[1].replace(/^\d+[\.\)]\s+/,'').trim();lines=[];}else if(cur&&l.trim())lines.push(l);});if(cur)s[cur]=lines;return s;};
+  const secs=parse(ai);
+  sh(rtype.toUpperCase()+' DETAILS');
+  fr('Date:',dateFmt);fr('Participant:','Shaun Case');fr('NDIS Number:','432005774');fr('Support Worker:','Daniel Hayward');fr('Support Coordinator:','Rachel Hanson');fr('Plan Manager:','Plan Partners — ISCP Plan Management');
+  if(type!=='weekly')fr('Shift Time:',start+' – '+end);
+  if(hrs)fr('Hours Worked:',hrs+' hrs');
+  if(km)fr('Kilometres Travelled:',km+' km');
+  if(type==='incident'&&incType)fr('Incident Type:',incType);
+  y+=4;
+  const orders={shift:[['SHIFT SUMMARY','1. SHIFT SUMMARY'],['ACTIVITIES COMPLETED','2. ACTIVITIES COMPLETED'],['PARTICIPANT ENGAGEMENT & PRESENTATION','3. PARTICIPANT ENGAGEMENT & PRESENTATION'],['GOALS & PROGRESS','4. GOALS & PROGRESS'],['ADDITIONAL NOTES & RECOMMENDATIONS','5. ADDITIONAL NOTES & RECOMMENDATIONS']],weekly:[['WEEK OVERVIEW','1. WEEK OVERVIEW'],['FUNCTIONAL PRESENTATION','2. FUNCTIONAL PRESENTATION'],['GOAL PROGRESS THIS WEEK','3. GOAL PROGRESS THIS WEEK'],['KEY HIGHLIGHTS','4. KEY HIGHLIGHTS'],['CONCERNS & RECOMMENDATIONS','5. CONCERNS & RECOMMENDATIONS']],incident:[['INCIDENT DESCRIPTION','1. INCIDENT DESCRIPTION'],['IMMEDIATE ACTIONS TAKEN','2. IMMEDIATE ACTIONS TAKEN'],['PARTICIPANT RESPONSE','3. PARTICIPANT RESPONSE'],['NOTIFICATIONS MADE','4. NOTIFICATIONS MADE'],['FOLLOW-UP ACTIONS REQUIRED','5. FOLLOW-UP ACTIONS REQUIRED']]};
+  orders[type].forEach(([key,heading])=>{let lines=secs[key]||[];if(!lines.length){const k=Object.keys(secs).find(k=>k.includes(key.slice(0,8)));if(k)lines=secs[k];}if(!lines.length)return;sh(heading);cb(heading.split('. ')[1]||heading,lines);});
+  const pre={shift:'Shift',weekly:'Weekly',incident:'Incident'}[type];
+  const fileName=pre+'_Report_'+date.replace(/-/g,'_')+'_ShaunCase.pdf';
+  const dataUri=doc.output('datauristring');
+  doc.save(fileName);
+  return{fileName,dataUri};
+}
+
+function buildHTMLPreview({type,dateFmt,start,end,hrs,km,incType,aiText}){
+  const TL={shift:'Daily Shift Report',weekly:'Weekly Support Report',incident:'Incident Report'};
+  const rtype=TL[type]||'Report';
+  const sec=(title,content)=>`<div style="margin-bottom:18px"><div style="background:#1B2A4A;color:#C49A1E;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 14px;border-left:4px solid #C49A1E">${title}</div><div style="background:#f7f8fc;border:1px solid #dde3f0;border-top:none;padding:13px 15px;font-size:13px;line-height:1.85;color:#1B2A4A">${content}</div></div>`;
+  const row=(l,v)=>`<div style="display:flex;border-bottom:1px solid #e8eaf0"><div style="width:42%;background:#f0f3fa;padding:6px 10px;font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px">${l}</div><div style="flex:1;padding:6px 10px;font-size:12.5px;color:#1B2A4A">${v||'—'}</div></div>`;
+  const lines=aiText.split('\n');
+  const sections=[];let cur=null,buf=[];
+  lines.forEach(l=>{const m=l.match(/^(\d+\.\s+[A-Z][A-Z\s&\/]+)$/);if(m){if(cur)sections.push({title:cur,lines:buf});cur=m[1].replace(/^\d+\.\s+/,'').trim();buf=[];}else if(cur&&l.trim())buf.push(l.trim());});
+  if(cur)sections.push({title:cur,lines:buf});
+  const sectHTML=sections.map(s=>{const content=s.lines.map(l=>`<div style="padding:3px 0 3px 14px;border-left:2px solid #C49A1E;margin-bottom:6px;font-size:12.5px;color:#1B2A4A;line-height:1.7">• ${l.replace(/^[-•]\s*/,'').trim()}</div>`).join('');return sec(s.title,content||'<em style="color:#aaa">Not recorded</em>');}).join('');
+  return`<div style="background:#1B2A4A;padding:20px 18px 14px"><div style="font-size:18px;font-weight:700;color:#C49A1E;font-family:Georgia,serif">Achieve Together Care</div><div style="font-size:9px;color:#e8d5a3;letter-spacing:2px;text-transform:uppercase;margin-top:3px">NDIS Disability Services</div><div style="height:2px;background:#C49A1E;margin:12px 0 10px"></div><div style="font-size:13px;font-weight:700;color:#fff;letter-spacing:1px;text-transform:uppercase">${rtype}</div></div><div style="padding:16px 14px"><div style="margin-bottom:18px;border:1px solid #dde3f0;border-radius:4px;overflow:hidden">${row('Date',dateFmt)}${row('Participant','Shaun Case')}${row('NDIS Number','432005774')}${row('Support Worker','Daniel Hayward')}${row('Support Coordinator','Rachel Hanson')}${row('Plan Manager','Plan Partners — ISCP Plan Management')}${type!=='weekly'?row('Shift Time',start+' – '+end):''}${hrs?row('Hours Worked',hrs+' hrs'):''}${km?row('Kilometres',km+' km'):''}${type==='incident'&&incType?row('Incident Type',incType):''}</div>${sectHTML}<div style="background:#1B2A4A;padding:12px 16px;border-radius:4px;margin-top:8px;display:flex;justify-content:space-between;align-items:center"><div style="color:#e8d5a3;font-size:9px;letter-spacing:1px">ACHIEVE TOGETHER CARE · CONFIDENTIAL</div><div style="color:#C49A1E;font-size:9px">${rtype.toUpperCase()}</div></div></div>`;
+}
+
+
+function buildHTMLPreview({type,dateFmt,start,end,hrs,km,incType,aiText}){
+  const TL={shift:'Daily Shift Report',weekly:'Weekly Support Report',incident:'Incident Report'};
+  const rtype=TL[type]||'Report';
+  const sec=(title,content)=>`<div style="margin-bottom:18px"><div style="background:#1B2A4A;color:#C49A1E;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 14px;border-left:4px solid #C49A1E">${title}</div><div style="background:#f7f8fc;border:1px solid #dde3f0;border-top:none;padding:13px 15px;font-size:13px;line-height:1.85;color:#1B2A4A">${content}</div></div>`;
+  const row=(l,v)=>`<div style="display:flex;border-bottom:1px solid #e8eaf0"><div style="width:42%;background:#f0f3fa;padding:6px 10px;font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px">${l}</div><div style="flex:1;padding:6px 10px;font-size:12.5px;color:#1B2A4A">${v||'—'}</div></div>`;
+  const lines=aiText.split('\n');
+  const sections=[];let cur=null,buf=[];
+  lines.forEach(l=>{const m=l.match(/^(\d+\.\s+[A-Z][A-Z\s&\/]+)$/);if(m){if(cur)sections.push({title:cur,lines:buf});cur=m[1].replace(/^\d+\.\s+/,'').trim();buf=[];}else if(cur&&l.trim())buf.push(l.trim());});
+  if(cur)sections.push({title:cur,lines:buf});
+  const sectHTML=sections.map(s=>{const content=s.lines.map(l=>`<div style="padding:3px 0 3px 14px;border-left:2px solid #C49A1E;margin-bottom:6px;font-size:12.5px;color:#1B2A4A;line-height:1.7">• ${l.replace(/^[-•]\s*/,'').trim()}</div>`).join('');return sec(s.title,content||'<em style="color:#aaa">Not recorded</em>');}).join('');
+  return`<div style="background:#1B2A4A;padding:20px 18px 14px"><div style="font-size:18px;font-weight:700;color:#C49A1E;font-family:Georgia,serif">Achieve Together Care</div><div style="font-size:9px;color:#e8d5a3;letter-spacing:2px;text-transform:uppercase;margin-top:3px">NDIS Disability Services</div><div style="height:2px;background:#C49A1E;margin:12px 0 10px"></div><div style="font-size:13px;font-weight:700;color:#fff;letter-spacing:1px;text-transform:uppercase">${rtype}</div></div><div style="padding:16px 14px"><div style="margin-bottom:18px;border:1px solid #dde3f0;border-radius:4px;overflow:hidden">${row('Date',dateFmt)}${row('Participant','Shaun Case')}${row('NDIS Number','432005774')}${row('Support Worker','Daniel Hayward')}${row('Support Coordinator','Rachel Hanson')}${row('Plan Manager','Plan Partners — ISCP Plan Management')}${type!=='weekly'?row('Shift Time',start+' – '+end):''}${hrs?row('Hours Worked',hrs+' hrs'):''}${km?row('Kilometres',km+' km'):''}${type==='incident'&&incType?row('Incident Type',incType):''}</div>${sectHTML}<div style="background:#1B2A4A;padding:12px 16px;border-radius:4px;margin-top:8px;display:flex;justify-content:space-between;align-items:center"><div style="color:#e8d5a3;font-size:9px;letter-spacing:1px">ACHIEVE TOGETHER CARE · CONFIDENTIAL</div><div style="color:#C49A1E;font-size:9px">${rtype.toUpperCase()}</div></div></div>`;
+}
+
+
+
+// ═══════════════════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════════════════
+let state={
+  screen:'calendar',
+  type:'shift',
+  calYear:new Date().getFullYear(),
+  calMonth:new Date().getMonth(),
+  selDate:null,
+  loading:false,
+  result:null,
+  invMode:'weekly',
+  weekDays:[],
+};
+
+// ═══════════════════════════════════════════════════════════
+// SCREEN MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+function showScreen(s){
+  state.screen=s;
+  document.getElementById('screen-calendar').classList.toggle('active',s==='calendar');
+  document.getElementById('screen-form').classList.toggle('active',s==='form');
+  if(s==='calendar'){updateStats();renderCal();}
+  if(s==='form'){renderForm();}
+  window.scrollTo(0,0);
+}
+function newDoc(type){
+  if(!state.selDate){alert('Tap a date on the calendar first');return;}
+  state.type=type;
+  state.result=null;
+  showScreen('form');
+}
+
+// ═══════════════════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════════════════
+function calPrev(){if(state.calMonth===0){state.calMonth=11;state.calYear--;}else state.calMonth--;renderCal();}
+function calNext(){if(state.calMonth===11){state.calMonth=0;state.calYear++;}else state.calMonth++;renderCal();}
+
+function renderCal(){
+  const {calYear,calMonth,selDate}=state;
+  document.getElementById('cal-month').textContent=MONTHS[calMonth]+' '+calYear;
+  const today=todayStr();
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML='';
+  // empty cells
+  for(let i=0;i<firstDay;i++){const c=document.createElement('div');c.className='cal-cell empty';grid.appendChild(c);}
+  // day cells
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const c=document.createElement('div');
+    c.className='cal-cell';
+    if(ds===today)c.classList.add('today');
+    if(ds===selDate)c.classList.add('sel');
+    else if(inWeek(ds,selDate)){
+      c.classList.add('inweek');
+      const {mon,sun}=getWeekRange(selDate);
+      if(ds===mon)c.classList.add('wstart');
+      if(ds===sun)c.classList.add('wend');
+    }
+    const num=document.createElement('div');num.className='cn';num.textContent=d;c.appendChild(num);
+    if(hasReps(ds)){const dot=document.createElement('div');dot.className='cd';if(ds===selDate)dot.style.background=GOLD;c.appendChild(dot);}
+    c.onclick=()=>selectDate(ds);
+    grid.appendChild(c);
+  }
+  // update new doc hint
+  const hint=document.getElementById('new-doc-hint');
+  hint.textContent=selDate?fmtDateLong(selDate):'Tap a date first';
+}
+
+function selectDate(ds){
+  state.selDate=ds;
+  renderCal();
+  renderDayPanel();
+  showScreen('form'); // tap date → straight to form
+  // Pre-fill form date
+  const fi=document.getElementById('f-date');
+  if(fi)fi.value=ds;
+}
+
+function updateStats(){
+  document.getElementById('cnt-shift').textContent=countType('shift');
+  document.getElementById('cnt-weekly').textContent=countType('weekly');
+  document.getElementById('cnt-incident').textContent=countType('incident');
+}
+
+// ═══════════════════════════════════════════════════════════
+// DAY PANEL
+// ═══════════════════════════════════════════════════════════
+function renderDayPanel(){
+  const panel=document.getElementById('day-panel');
+  if(!state.selDate){panel.classList.add('hidden');return;}
+  const reps=getReps(state.selDate);
+  const dayLabel=fmtDateLong(state.selDate);
+  const TYPE_COLOR={shift:BLUE,weekly:GREEN,incident:RED,invoice:PURPLE};
+  const TYPE_ICON={shift:'📋',weekly:'📆',incident:'🚨',invoice:'🧾'};
+  let html=`<div class="day-panel">
+    <div style="background:${NAVY};padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="color:${GOLD};font-weight:700;font-size:13px;font-family:Georgia,serif;">${dayLabel}</div>
+        <div style="color:rgba(255,255,255,.55);font-size:10px;margin-top:2px;">${reps.length} document${reps.length!==1?'s':''} saved</div>
+      </div>
+      <button onclick="newDoc(state.type||'shift')" style="background:${GOLD};border:none;color:${NAVYD};padding:9px 14px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;">+ New Report</button>
+    </div>`;
+  if(reps.length===0){
+    html+=`<div style="padding:22px 16px;text-align:center;color:#aaa;font-size:13px;">No reports saved yet for this day.</div>`;
+  } else {
+    html+=`<div style="padding:12px 14px;">`;
+    reps.forEach((r,i)=>{
+      const col=TYPE_COLOR[r.type]||NAVY;
+      const icon=TYPE_ICON[r.type]||'📄';
+      // Build Google Calendar URL
+      const gcUrl=buildGcUrl(state.selDate,r.label,r.time);
+      html+=`<div class="rep-card" style="border:2px solid ${col};">
+        <div style="background:${col};padding:10px 13px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">${icon}</span>
+          <div style="flex:1;">
+            <div style="color:#fff;font-weight:700;font-size:12px;font-family:Georgia,serif;">${r.label}</div>
+            <div style="color:rgba(255,255,255,.65);font-size:10px;margin-top:1px;">${r.time?r.time.replace('-',' – ')+' · ':''}${r.hrs?r.hrs+' hrs':''}${r.km?' · '+r.km+' km':''}</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;">
+          <a href="${DRIVE_URL}" target="_blank" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:16px 6px;background:${GREEN};color:#fff;text-decoration:none;font-weight:700;font-size:12px;">
+            <span style="font-size:22px;">☁️</span><span>Open Drive</span><span style="font-size:9px;opacity:.7;">Upload PDF here</span>
+          </a>
+          <a href="${gcUrl}" target="_blank" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:16px 6px;background:${GOLD};color:${NAVYD};text-decoration:none;font-weight:700;font-size:12px;">
+            <span style="font-size:22px;">📅</span><span>Add to Calendar</span><span style="font-size:9px;opacity:.7;">${state.selDate.split('-').reverse().slice(0,2).join('/')}</span>
+          </a>
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  panel.innerHTML=html;
+  panel.classList.remove('hidden');
+}
+
+function buildGcUrl(date,label,timeStr){
+  try{
+    const d=date.replace(/-/g,'');
+    let s,e;
+    if(timeStr&&timeStr.includes('-')){
+      const [st,en]=timeStr.split('-');
+      s=d+'T'+st.replace(':','')+'00';
+      e=d+'T'+en.replace(':','')+'00';
+    } else {s=d;e=d;}
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=ATC+—+${encodeURIComponent(label)}+—+Shaun+Case&dates=${s}/${e}&details=Achieve+Together+Care+NDIS+Support+Document`;
+  }catch{return 'https://calendar.google.com';}
+}
+
+// ═══════════════════════════════════════════════════════════
+// FORM
+// ═══════════════════════════════════════════════════════════
+function setType(t){
+  state.type=t;
+  renderForm();
+}
+function setInvMode(m){
+  state.invMode=m;
+  document.getElementById('inv-mode-weekly').style.borderColor=m==='weekly'?PURPLE:'#ddd';
+  document.getElementById('inv-mode-weekly').style.background=m==='weekly'?'#F0EBF8':'#fff';
+  document.getElementById('inv-mode-weekly').style.color=m==='weekly'?PURPLE:'#888';
+  document.getElementById('inv-mode-single').style.borderColor=m==='single'?PURPLE:'#ddd';
+  document.getElementById('inv-mode-single').style.background=m==='single'?'#F0EBF8':'#fff';
+  document.getElementById('inv-mode-single').style.color=m==='single'?PURPLE:'#888';
+  document.getElementById('inv-weekly-form').classList.toggle('hidden',m!=='weekly');
+  document.getElementById('inv-single-form').classList.toggle('hidden',m!=='single');
+}
+
+const TYPE_CFG={
+  shift:{label:'Daily Shift Report',icon:'📋',color:BLUE,bg:'#EBF1FA'},
+  weekly:{label:'Weekly Support Report',icon:'📆',color:GREEN,bg:'#E4F2EC'},
+  incident:{label:'Incident Report',icon:'🚨',color:RED,bg:'#FBEBE8'},
+  invoice:{label:'Tax Invoice',icon:'🧾',color:PURPLE,bg:'#F0EBF8'},
+};
+
+function renderForm(){
+  const t=state.type;
+  const cfg=TYPE_CFG[t];
+  // Pills
+  ['shift','weekly','incident','invoice'].forEach(p=>{
+    const el=document.getElementById('pill-'+p);
+    el.className='pill'+(p===t?' active-'+p:'');
+  });
+  // Show/hide sections
+  document.getElementById('form-report').classList.toggle('hidden',t==='invoice');
+  document.getElementById('form-invoice').classList.toggle('hidden',t!=='invoice');
+  document.getElementById('inc-type-wrap').classList.toggle('hidden',t!=='incident');
+  // Card title
+  const titles={shift:'Shift Details',weekly:'Week Details',incident:'Incident Details'};
+  const cardTitle=document.getElementById('form-card-title');
+  if(cardTitle)cardTitle.textContent=titles[t]||'Details';
+  // Type badge
+  const badge=document.getElementById('type-badge');
+  badge.style.background=cfg.bg;badge.style.borderColor=cfg.color;badge.style.color=cfg.color;
+  badge.textContent=cfg.icon+' '+cfg.label;
+  // Generate button
+  const btn=document.getElementById('gen-btn');
+  btn.style.background=cfg.color;
+  btn.textContent=cfg.icon+' '+(t==='invoice'?'Generate Invoice PDF':'Generate '+cfg.label+' + PDF');
+  // Date default
+  const fd=document.getElementById('f-date');
+  if(fd&&!fd.value)fd.value=state.selDate||todayStr();
+  updateHrs();
+  // Weekly invoice days init
+  if(t==='invoice'&&state.weekDays.length===0){initWeekDays();}
+  if(t==='invoice'){renderWeekDays();renderWeekTotals();}
+}
+
+function updateHrs(){
+  const s=document.getElementById('f-start')?.value||'09:00';
+  const e=document.getElementById('f-end')?.value||'15:00';
+  const h=calcHrs(s,e);
+  const km=document.getElementById('f-km')?.value||'45';
+  const badge=document.getElementById('hrs-badge');
+  if(badge){badge.textContent=h+' hrs · '+km+' km';badge.classList.toggle('hidden',!h);}
+}
+
+// ═══════════════════════════════════════════════════════════
+// WEEKLY INVOICE DAYS
+// ═══════════════════════════════════════════════════════════
+function initWeekDays(){
+  // Default Mon–Fri of current week
+  const today=todayStr();
+  const {mon}=getWeekRange(today);
+  state.weekDays=[];
+  for(let i=0;i<5;i++){
+    const d=new Date(mon+'T12:00:00');d.setDate(d.getDate()+i);
+    const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    state.weekDays.push({date:ds,start:'09:00',end:'15:00',km:'45',active:true});
+  }
+  // Set period
+  const wi=document.getElementById('wi-period');
+  if(wi){const last=state.weekDays[state.weekDays.length-1].date;wi.value=fmtDateLong(mon).split(',')[1].trim()+' – '+fmtDateLong(last).split(',')[1].trim();}
+  const wdate=document.getElementById('wi-date');
+  if(wdate)wdate.value=state.weekDays[state.weekDays.length-1]?.date||todayStr();
+}
+
+function addWeekDay(){
+  state.weekDays.push({date:todayStr(),start:'09:00',end:'15:00',km:'45',active:true});
+  renderWeekDays();renderWeekTotals();
+}
+
+function renderWeekDays(){
+  const list=document.getElementById('week-days-list');
+  if(!list)return;
+  const DAYLABELS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  list.innerHTML=state.weekDays.map((d,i)=>{
+    const dow=d.date?DAYLABELS[new Date(d.date+'T12:00:00').getDay()]:'';
+    const h=calcHrs(d.start,d.end);
+    return `<div class="day-row ${d.active?'':'inactive'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" ${d.active?'checked':''} onchange="toggleDay(${i},this.checked)" style="width:18px;height:18px;accent-color:${PURPLE};">
+          <span style="font-weight:700;font-size:13px;color:${PURPLE};">${dow}</span>
+        </div>
+        <span style="font-size:11px;color:#999;">${h?h+' hrs':''}</span>
+        <button onclick="removeWeekDay(${i})" style="background:transparent;border:none;color:#B02E1A;font-size:18px;cursor:pointer;padding:0 4px;">×</button>
+      </div>
+      <div class="g3">
+        <div><label class="lbl">Date</label><input type="date" value="${d.date}" onchange="updateDay(${i},'date',this.value)"></div>
+        <div><label class="lbl">Start</label><input type="time" value="${d.start}" onchange="updateDay(${i},'start',this.value)"></div>
+        <div><label class="lbl">Finish</label><input type="time" value="${d.end}" onchange="updateDay(${i},'end',this.value)"></div>
+      </div>
+      <div style="margin-top:8px;"><label class="lbl">KM</label><input type="number" value="${d.km}" onchange="updateDay(${i},'km',this.value)"></div>
+    </div>`;
+  }).join('');
+}
+function updateDay(i,field,val){state.weekDays[i][field]=val;renderWeekDays();renderWeekTotals();}
+function toggleDay(i,v){state.weekDays[i].active=v;renderWeekDays();renderWeekTotals();}
+function removeWeekDay(i){state.weekDays.splice(i,1);renderWeekDays();renderWeekTotals();}
+
+function renderWeekTotals(){
+  const el=document.getElementById('week-totals');
+  if(!el)return;
+  const RATES={0:127.43,6:98.83};
+  let hrs=0,km=0,amt=0;
+  state.weekDays.filter(d=>d.active).forEach(d=>{
+    const h=calcHrs(d.start,d.end);
+    const k=parseFloat(d.km)||0;
+    const dow=d.date?new Date(d.date+'T12:00:00').getDay():1;
+    const rate=RATES[dow]||70.23;
+    hrs+=h;km+=k;amt+=h*rate+k*0.97;
+  });
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px;font-size:13px;">
+    <div style="display:flex;justify-content:space-between;"><span>Total Hours:</span><strong>${hrs.toFixed(1)} hrs</strong></div>
+    <div style="display:flex;justify-content:space-between;"><span>Total KM:</span><strong>${km} km</strong></div>
+    <div style="display:flex;justify-content:space-between;padding:8px;background:#1B2A4A;border-radius:6px;color:#fff;">
+      <span style="font-weight:700;">Estimated Total:</span><strong style="color:${GOLD};">$${amt.toFixed(2)}</strong>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// GENERATE
+// ═══════════════════════════════════════════════════════════
+async function generate(){
+  const errEl=document.getElementById('form-err');
+  errEl.classList.add('hidden');
+  const btn=document.getElementById('gen-btn');
+  const origText=btn.textContent;
+  btn.innerHTML='<div class="spinner"></div> Building...';
+  btn.disabled=true;
+
+  try{
+    const t=state.type;
+    let result=null;
+
+    if(t==='invoice'){
+      const mode=state.invMode;
+      if(mode==='weekly'){
+        const active=state.weekDays.filter(d=>d.active&&calcHrs(d.start,d.end)>0);
+        if(!active.length){showErr('Please add at least one active shift day.');return;}
+        const invNum=document.getElementById('wi-num').value||'INV-001';
+        const wiDate=document.getElementById('wi-date').value;
+        const invDate=wiDate?new Date(wiDate+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):todayStr();
+        const period=document.getElementById('wi-period').value||'This week';
+        result=await makeWeeklyInvoice({invNum,invDate,period,days:state.weekDays,lineItem:'09',bankName:'Achieve Together Care',bsb:'067-873',accNum:'207-436-73',abn:'68 493 366 184'});
+        androidDownload(result.dataUri,result.fileName);
+        const entry={type:'invoice',label:'Weekly Invoice — '+period,time:'',hrs:'',km:'',fileName:result.fileName,dataUri:result.dataUri};
+        state.weekDays.filter(d=>d.active).forEach(d=>saveRep(d.date,{...entry}));
+        result.htmlPreview='';
+        result.aiText=null;
+        result.dateFmt=period;
+        result.start='';result.end='';
+      } else {
+        const invNum=document.getElementById('si-num').value||'INV-001';
+        const siDate=document.getElementById('si-date').value||todayStr();
+        const sDate=document.getElementById('si-sdate').value||todayStr();
+        const start=document.getElementById('si-start').value||'09:00';
+        const end=document.getElementById('si-end').value||'15:00';
+        const km=document.getElementById('si-km').value||'45';
+        const li=document.getElementById('si-item').value||'09';
+        const hrs=calcHrs(start,end).toString();
+        const invDate=new Date(siDate+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+        const dateFmt=fmtDateLong(sDate);
+        result=await makeSingleInvoice({invNum,invDate,dateFmt,date:sDate,start,end,hrs,km,lineItem:li,bankName:'Achieve Together Care',bsb:'067-873',accNum:'207-436-73',abn:'68 493 366 184'});
+        androidDownload(result.dataUri,result.fileName);
+        saveRep(sDate,{type:'invoice',label:'Tax Invoice '+invNum,time:start+'-'+end,hrs,km,fileName:result.fileName,dataUri:result.dataUri});
+        result.htmlPreview='';result.aiText=null;result.dateFmt=dateFmt;result.start=start;result.end=end;
+      }
+    } else {
+      const notes=document.getElementById('f-notes').value.trim();
+      if(!notes){showErr('Please write what happened first!');return;}
+      if(!apiKey){showErr('Please enter your Anthropic API key — tap 🔑 in the header.');return;}
+      const date=document.getElementById('f-date').value||todayStr();
+      const start=document.getElementById('f-start').value||'09:00';
+      const end=document.getElementById('f-end').value||'15:00';
+      const km=document.getElementById('f-km').value||'45';
+      const hrs=calcHrs(start,end).toString();
+      const dateFmt=fmtDateLong(date);
+      const incType=document.getElementById('f-inc-type')?.value||'';
+      const TYPE_LABELS={shift:'Daily Shift Report',weekly:'Weekly Support Report',incident:'Incident Report'};
+      const SECTIONS={
+        shift:'1. SHIFT SUMMARY\n2. ACTIVITIES COMPLETED\n3. PARTICIPANT ENGAGEMENT & PRESENTATION\n4. GOALS & PROGRESS\n5. ADDITIONAL NOTES & RECOMMENDATIONS',
+        weekly:'1. WEEK OVERVIEW\n2. FUNCTIONAL PRESENTATION\n3. GOAL PROGRESS THIS WEEK\n4. KEY HIGHLIGHTS\n5. CONCERNS & RECOMMENDATIONS',
+        incident:'1. INCIDENT DESCRIPTION\n2. IMMEDIATE ACTIONS TAKEN\n3. PARTICIPANT RESPONSE\n4. NOTIFICATIONS MADE\n5. FOLLOW-UP ACTIONS REQUIRED'
+      };
+      const prompt=`You are writing a professional NDIS support worker report for Achieve Together Care.
+
+PARTICIPANT: Shaun Case | NDIS: 432005774
+SUPPORT WORKER: Daniel Hayward
+SUPPORT COORDINATOR: Rachel Hanson
+PLAN MANAGER: Plan Partners — ISCP Plan Management
+DATE: ${dateFmt}
+SHIFT: ${start} – ${end} (${hrs} hours)${km?' | KM: '+km:''}${t==='incident'?' | INCIDENT TYPE: '+incType:''}
+
+WORKER NOTES:
+${notes}
+
+Write a complete professional ${TYPE_LABELS[t]} with detailed, meaningful content.
+
+STRICT FORMATTING — follow exactly:
+1. Use ONLY these section headings on their own line:
+${SECTIONS[t]}
+
+2. After each heading, write 4-6 bullet points starting with "- "
+3. Each bullet point must be a complete, detailed professional sentence
+4. NO markdown at all: no **, no *, no ##, no ---, no bold, no italic
+5. Third person only. Professional NDIS language.`;
+
+      const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
+      if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'API error '+res.status);}
+      const data=await res.json();
+      const ai=data.content?.map(b=>b.text||'').join('')||'';
+      const clean=ai.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1').replace(/^#{1,6}\s+/gm,'').replace(/^-{3,}\s*$/gm,'');
+      result=await makeReport(t,dateFmt,date,start,end,hrs,km,incType,clean);
+      androidDownload(result.dataUri,result.fileName);
+      const htmlPreview=buildHTMLPreview({type:t,dateFmt,start,end,hrs,km,incType,aiText:clean});
+      saveRep(date,{type:t,label:TYPE_LABELS[t],time:start+'-'+end,hrs,km,fileName:result.fileName,dataUri:result.dataUri,htmlPreview,aiText:clean});
+      result.htmlPreview=htmlPreview;result.aiText=clean;result.dateFmt=dateFmt;result.start=start;result.end=end;result.hrs=hrs;result.km=km;
+      // Update calendar
+      state.selDate=date;
+    }
+
+    state.result=result;
+    showResult(result);
+  } catch(e){
+    showErr('Error: '+e.message);
+  } finally {
+    btn.textContent=origText;btn.disabled=false;
+  }
+}
+
+function showErr(msg){
+  const el=document.getElementById('form-err');
+  el.textContent='⚠️ '+msg;el.classList.remove('hidden');
+  document.getElementById('gen-btn').textContent=TYPE_CFG[state.type].icon+' '+
+    (state.type==='invoice'?'Generate Invoice PDF':'Generate '+TYPE_CFG[state.type].label+' + PDF');
+  document.getElementById('gen-btn').disabled=false;
+}
+
+function showResult(r){
+  document.getElementById('result-area').classList.remove('hidden');
+  document.getElementById('result-filename').textContent=r.fileName;
+  document.getElementById('view-cal-btn').textContent='📅 View on Calendar — '+(r.dateFmt||'');
+
+  if(r.aiText){
+    document.getElementById('report-preview-wrap').classList.remove('hidden');
+    // Details grid
+    const details=document.getElementById('preview-details');
+    const pairs=[['Date',r.dateFmt],['Worker','Daniel Hayward'],['Shift',(r.start&&r.end)?r.start+' – '+r.end:''],['Hours',r.hrs?r.hrs+' hrs':''],['KM',r.km?r.km+' km':''],['Plan Mgr','Plan Partners']];
+    details.innerHTML=pairs.map(([l,v])=>v?`<div><strong>${l}:</strong> ${v}</div>`:'').join('');
+    document.getElementById('preview-date').textContent=r.dateFmt||'';
+    // Parse sections
+    const lines=r.aiText.split('\n');
+    const sections=[];let cur=null,buf=[];
+    lines.forEach(l=>{
+      const clean=l.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1').replace(/^#{1,6}\s+/,'').trim();
+      const isHead=clean.match(/^\d+\.\s+[A-Z][A-Z\s&\/]+$/);
+      if(isHead){if(cur!==null)sections.push({title:cur,bullets:buf});cur=clean.replace(/^\d+\.\s+/,'');buf=[];}
+      else if(cur!==null&&clean.match(/^[-•]\s+/)){buf.push(clean.replace(/^[-•]\s+/,''));}
+    });
+    if(cur!==null)sections.push({title:cur,bullets:buf});
+    const secEl=document.getElementById('preview-sections');
+    secEl.innerHTML=sections.map((s,si)=>`
+      <div class="rpt-sec-hd"><span>${s.title}</span></div>
+      <div class="rpt-sec-body ${si%2?'alt':''}">
+        ${s.bullets.map(b=>`<div class="rpt-bullet"><span style="color:${GOLD};font-weight:700;flex-shrink:0">•</span><span>${b}</span></div>`).join('')}
+        ${s.bullets.length===0?'<div style="color:#aaa;font-style:italic;font-size:11px;">No content</div>':''}
+      </div>`).join('');
+  } else {
+    document.getElementById('report-preview-wrap').classList.add('hidden');
+  }
+}
+
+function viewFullReport(){
+  if(!state.result?.htmlPreview)return;
+  document.getElementById('modal-filename').textContent=state.result.fileName||'';
+  document.getElementById('report-modal-body').innerHTML=state.result.htmlPreview;
+  document.getElementById('report-modal').classList.remove('hidden');
+}
+function closeModal(){document.getElementById('report-modal').classList.add('hidden');}
+function modalDownload(){if(state.result)androidDownload(state.result.dataUri,state.result.fileName);}
+function reDownload(){if(state.result)androidDownload(state.result.dataUri,state.result.fileName);}
+function viewOnCal(){
+  state.selDate=document.getElementById('f-date')?.value||state.selDate;
+  showScreen('calendar');
+  renderDayPanel();
+}
+function resetForm(){
+  state.result=null;
+  document.getElementById('result-area').classList.add('hidden');
+  document.getElementById('form-err').classList.add('hidden');
+  document.getElementById('f-notes').value='';
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+window.onload=function(){
+  // Set today's date on form fields
+  const t=todayStr();
+  ['f-date','si-sdate','si-date','wi-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=t;});
+  updateStats();
+  renderCal();
+  renderForm();
+  // Show API status
+  if(apiKey)document.getElementById('api-status').textContent='✅ API Key saved';
+};
+
+</script>
+</body>
+</html>
