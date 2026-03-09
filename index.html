@@ -539,6 +539,7 @@ textarea{min-height:130px;resize:vertical;line-height:1.65;}
     <button class="hdr-btn-out" onclick="toggleApiPanel()">🔑</button>
     <button class="hdr-btn" onclick="showScreen('calendar')">Cal</button>
     <button class="hdr-btn" onclick="showScreen('form')">New</button>
+      <button onclick="autoGenerateWeekly()" style="background:linear-gradient(135deg,#1c6e45,#22a05a);border:none;border-radius:20px;color:#fff;padding:8px 14px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;white-space:nowrap;">📅 Weekly</button>
   </div>
 
   <!-- API KEY PANEL -->
@@ -1679,11 +1680,138 @@ function importData(event){
   // Reset input so same file can be imported again
   event.target.value='';
 }
+
+// ═══════════════════════════════════════════════════════════
+// AUTO WEEKLY — Friday 4pm generation
+// ═══════════════════════════════════════════════════════════
+function getWeekFriToThu(fromDate){
+  const d=new Date(fromDate+'T12:00:00');
+  const dow=d.getDay();
+  const sinceF=(dow>=5)?dow-5:dow+2;
+  const fri=new Date(d);fri.setDate(d.getDate()-sinceF);
+  const thu=new Date(fri);thu.setDate(fri.getDate()+6);
+  const fmt=n=>n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+  return{fri:fmt(fri),thu:fmt(thu)};
+}
+function getShiftsForWeek(fri,thu){
+  const shifts=[];
+  Object.keys(STORE).sort().forEach(date=>{
+    if(date>=fri&&date<=thu){
+      STORE[date].forEach(r=>{if(r.type==='shift')shifts.push({...r,date});});
+    }
+  });
+  return shifts;
+}
+function fmtPeriodLabel(fri,thu){
+  const f=new Date(fri+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+  const t=new Date(thu+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
+  return f+' \u2013 '+t;
+}
+function autoGenerateWeekly(){
+  const today=todayStr();
+  const{fri,thu}=getWeekFriToThu(today);
+  const shifts=getShiftsForWeek(fri,thu);
+  const period=fmtPeriodLabel(fri,thu);
+  showAutoWeeklyPanel(fri,thu,shifts,period);
+}
+function showAutoWeeklyPanel(fri,thu,shifts,period){
+  const existing=document.getElementById('auto-weekly-overlay');
+  if(existing)existing.remove();
+  const totalHrs=shifts.reduce((a,s)=>a+(parseFloat(s.hrs)||0),0).toFixed(1);
+  const totalKm=shifts.reduce((a,s)=>a+(parseFloat(s.km)||0),0);
+  const overlay=document.createElement('div');
+  overlay.id='auto-weekly-overlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:20000;background:rgba(4,10,22,0.95);display:flex;align-items:flex-end;justify-content:center;';
+  const shiftRows=shifts.length===0
+    ?'<div style="color:#6b6258;font-size:13px;font-style:italic;">No shifts recorded this week yet</div>'
+    :shifts.map(s=>'<div style="display:flex;justify-content:space-between;font-size:12px;color:#f0ece3;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span>\ud83d\udccb '+new Date(s.date+'T12:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})+'</span><span style="color:#a8a090;">'+(s.hrs||'?')+' hrs \u00b7 '+(s.km||'?')+' km</span></div>').join('');
+  const disabledAttr=shifts.length===0?'disabled style="opacity:0.4;cursor:not-allowed;"':'';
+  overlay.innerHTML='<div style="background:linear-gradient(160deg,#13203d,#080f1e);border:1px solid rgba(196,154,30,0.3);border-bottom:none;border-radius:24px 24px 0 0;padding:20px 20px 0;width:100%;max-width:520px;box-shadow:0 -16px 60px rgba(0,0,0,0.8);">'
+    +'<div style="width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,0.15);margin:0 auto 18px;"></div>'
+    +'<div style="font-size:30px;text-align:center;margin-bottom:8px;">\ud83d\udcc5</div>'
+    +'<div style="font-family:\'Fraunces\',serif;font-size:22px;font-weight:500;color:#f0ece3;text-align:center;margin-bottom:4px;">Weekly Auto-Generate</div>'
+    +'<div style="font-size:12px;color:#a8a090;text-align:center;margin-bottom:16px;">'+period+'</div>'
+    +'<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;margin-bottom:14px;">'
+    +'<div style="font-size:10px;font-weight:800;color:#6b6258;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">THIS WEEK\'S SHIFTS</div>'
+    +shiftRows
+    +'<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:#c49a1e;padding:8px 0 0;margin-top:4px;"><span>TOTAL</span><span>'+totalHrs+' hrs \u00b7 '+totalKm+' km</span></div>'
+    +'</div>'
+    +'<div style="font-size:10px;font-weight:800;color:#6b6258;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">EXTRA NOTES (optional)</div>'
+    +'<textarea id="auto-weekly-notes" placeholder="Any extra context, goals progress, concerns..." style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#f0ece3;border-radius:10px;padding:11px 13px;font-size:13px;font-family:\'Cabinet Grotesk\',sans-serif;min-height:70px;resize:none;margin-bottom:14px;"></textarea>'
+    +'<div style="display:flex;flex-direction:column;gap:9px;margin-bottom:16px;">'
+    +'<button onclick="runAutoWeekly(\''+fri+'\',\''+thu+'\',\''+period+'\')" '+disabledAttr+' style="width:100%;padding:17px;border:none;border-radius:14px;background:linear-gradient(135deg,#1c6e45,#22a05a);color:#fff;font-family:\'Fraunces\',serif;font-size:16px;font-weight:700;cursor:pointer;">\ud83d\udcc6 Generate Weekly Report + Invoice</button>'
+    +'<button onclick="document.getElementById(\'auto-weekly-overlay\').remove()" style="width:100%;padding:14px;border:1px solid rgba(255,255,255,0.1);border-radius:14px;background:transparent;color:#a8a090;font-family:\'Fraunces\',serif;font-size:14px;font-weight:600;cursor:pointer;">Not now</button>'
+    +'</div>'
+    +'<div style="height:max(env(safe-area-inset-bottom,0px),16px);"></div>'
+    +'</div>';
+  document.body.appendChild(overlay);
+}
+async function runAutoWeekly(fri,thu,period){
+  const allBtns=document.querySelectorAll('#auto-weekly-overlay button');
+  allBtns.forEach(b=>{b.disabled=true;});
+  const firstBtn=allBtns[0];
+  if(firstBtn)firstBtn.innerHTML='<div class="spinner" style="margin:0 auto;width:20px;height:20px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;"></div>';
+  const shifts=getShiftsForWeek(fri,thu);
+  const extraNotes=document.getElementById('auto-weekly-notes')?.value.trim()||'';
+  const totalHrs=shifts.reduce((a,s)=>a+(parseFloat(s.hrs)||0),0).toFixed(1);
+  const totalKm=shifts.reduce((a,s)=>a+(parseFloat(s.km)||0),0);
+  const shiftSummaries=shifts.map(s=>fmtDateLong(s.date)+': '+(s.hrs||'?')+' hrs, '+(s.km||'?')+' km. '+(s.notes||s.label||'')).join('\n');
+  try{
+    if(!apiKey)throw new Error('No API key — tap \ud83d\udd11 to add it');
+    const prompt='You are writing a professional NDIS Weekly Support Report for Achieve Together Care.\n\nPARTICIPANT: Shaun Case | NDIS: 432005774\nSUPPORT WORKER: Daniel Hayward\nPERIOD: '+period+'\nTOTAL HOURS: '+totalHrs+' hrs | TOTAL KM: '+totalKm+' km\n\nSHIFTS THIS WEEK:\n'+shiftSummaries+'\n'+(extraNotes?'\nADDITIONAL NOTES: '+extraNotes:'')+'\n\nWrite a professional weekly NDIS support report with these exact sections:\n1. WEEK OVERVIEW\n2. FUNCTIONAL PRESENTATION\n3. GOAL PROGRESS THIS WEEK\n4. KEY HIGHLIGHTS\n5. CONCERNS & RECOMMENDATIONS\n\nEach section: heading then bullet points starting with "- ". Professional, person-centred. 300-400 words.';
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'API error');}
+    const data=await resp.json();
+    const aiText=data.content[0].text;
+    // Weekly report PDF
+    const weeklyResult=await makeReport({type:'weekly',date:thu,start:'',end:'',hrs:totalHrs,km:totalKm.toString(),dateFmt:period,aiText,incType:''});
+    androidDownload(weeklyResult.dataUri,weeklyResult.fileName);
+    saveRep(thu,{type:'weekly',label:'Weekly Report \u2014 '+period,time:'',hrs:totalHrs,km:totalKm.toString(),fileName:weeklyResult.fileName,notes:aiText});
+    // Weekly invoice PDF
+    const allDays=[];
+    for(let i=0;i<7;i++){
+      const d=new Date(fri+'T12:00:00');d.setDate(d.getDate()+i);
+      const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      const shift=shifts.find(s=>s.date===ds);
+      const timeParts=shift?.time?shift.time.split('-'):['09:00','15:00'];
+      allDays.push({date:ds,active:!!shift,start:timeParts[0]||'09:00',end:timeParts[1]||'15:00',km:parseFloat(shift?.km)||0});
+    }
+    const invNum='INV-'+thu.replace(/-/g,'').slice(2);
+    const invDate=new Date(thu+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+    const invoiceResult=await makeWeeklyInvoice({invNum,invDate,period,days:allDays,lineItem:'09',bankName:'Achieve Together Care',bsb:'067-873',accNum:'207-436-73',abn:'68 493 366 184'});
+    androidDownload(invoiceResult.dataUri,invoiceResult.fileName);
+    saveRep(thu,{type:'invoice',label:'Weekly Invoice \u2014 '+period,time:'',hrs:totalHrs,km:totalKm.toString(),fileName:invoiceResult.fileName});
+    updateStats();renderCal();
+    document.getElementById('auto-weekly-overlay').remove();
+    // Success popup
+    const s=document.createElement('div');
+    s.style.cssText='position:fixed;inset:0;z-index:20001;background:rgba(4,10,22,0.92);display:flex;align-items:center;justify-content:center;';
+    s.innerHTML='<div style="background:linear-gradient(160deg,#13203d,#080f1e);border:1px solid rgba(196,154,30,0.3);border-radius:24px;padding:32px 24px;text-align:center;max-width:320px;margin:20px;"><div style="font-size:48px;margin-bottom:12px;">\u2705</div><div style="font-family:\'Fraunces\',serif;font-size:22px;color:#f0ece3;margin-bottom:8px;">Week Complete!</div><div style="font-size:13px;color:#a8a090;margin-bottom:16px;">'+period+'<br>'+totalHrs+' hrs \u00b7 '+totalKm+' km \u00b7 '+shifts.length+' shifts</div><div style="font-size:12px;color:#34d48a;margin-bottom:20px;">\ud83d\udcc6 Weekly Report downloaded<br>\ud83e\uddfe Invoice downloaded</div><button onclick="this.closest(\'div[style]\').remove()" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#c49a1e,#e8bc3a);color:#080f1e;font-family:\'Fraunces\',serif;font-size:15px;font-weight:700;cursor:pointer;">Done</button></div>';
+    document.body.appendChild(s);
+  }catch(err){
+    const o=document.getElementById('auto-weekly-overlay');if(o)o.remove();
+    alert('Error: '+err.message);
+  }
+}
+function checkFridayTrigger(){
+  const now=new Date();
+  if(now.getDay()===5&&now.getHours()===16&&now.getMinutes()<5){
+    const lastRun=localStorage.getItem('atc_last_weekly_run')||'';
+    const tomlday=todayStr();
+    if(lastRun!==today){
+      localStorage.setItem('atc_last_weekly_run',today);
+      setTimeout(()=>autoGenerateWeekly(),2000);
+    }
+  }
+}
+function scheduleWeeklyCheck(){checkFridayTrigger();setInterval(checkFridayTrigger,60000);}
+
 window.onload=function(){
   const t=todayStr();
   ['f-date','si-sdate','si-date','wi-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=t;});
   updateStats();renderCal();renderForm();
   if(apiKey)document.getElementById('api-status').textContent='✅ API Key saved';
+  scheduleWeeklyCheck();
   // Touch swipe for calendar
   let swipeStartX=0;
   const calWrap=document.getElementById('cal-wrap');
@@ -1699,4 +1827,4 @@ window.onload=function(){
 
 </script>
 </body>
-</html>
+  </html>
