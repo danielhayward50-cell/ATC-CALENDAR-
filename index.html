@@ -1472,6 +1472,8 @@ function showActionSheet(r){
 function closeActionSheet(){
   const overlay=document.getElementById('action-sheet-overlay');
   if(overlay)overlay.classList.add('hidden');
+  updateStats(); renderCal();
+  if(state.selDate) renderDayPanel(state.selDate);
   // refresh in-app calendar stats
   updateStats();
   renderCal();
@@ -1506,6 +1508,7 @@ function showErr(msg){
 
 function showResult(r){
   document.getElementById('result-area').classList.remove('hidden');
+  updateStats(); renderCal();
   setTimeout(()=>showActionSheet(r),500);
   // Show Drive upload prompt after short delay
   
@@ -1536,7 +1539,17 @@ function viewFullReport(){if(!state.result?.htmlPreview)return;document.getEleme
 function closeModal(){document.getElementById('report-modal').classList.add('hidden');}
 function modalDownload(){if(state.result)androidDownload(state.result.dataUri,state.result.fileName);}
 function reDownload(){if(state.result)androidDownload(state.result.dataUri,state.result.fileName);}
-function viewOnCal(){state.selDate=document.getElementById('f-date')?.value||state.selDate;showScreen('calendar');renderDayPanel();}
+function viewOnCal(){
+  const d=document.getElementById('f-date')?.value||state.selDate;
+  if(d) state.selDate=d;
+  updateStats(); renderCal();
+  showScreen('calendar');
+  setTimeout(()=>{
+    renderDayPanel(state.selDate);
+    const dp=document.getElementById('day-panel');
+    if(dp) dp.scrollIntoView({behavior:'smooth',block:'start'});
+  },100);
+}
 function resetForm(){state.result=null;document.getElementById('result-area').classList.add('hidden');document.getElementById('form-err').classList.add('hidden');document.getElementById('f-notes').value='';}
 
 // ═══════════════════════════════════════════════════════════
@@ -1562,4 +1575,4 @@ window.onload=function(){
 
 </script>
 </body>
-            </html
+</html>
