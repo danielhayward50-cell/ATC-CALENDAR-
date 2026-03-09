@@ -598,6 +598,10 @@ textarea{min-height:130px;resize:vertical;line-height:1.65;}
       <div style="font-size:11.5px;color:var(--text3);font-weight:500;">Tap any date to create or view reports</div>
         <span id="sync-icon">🔄</span> Sync
       </button>
+      <button onclick="exportData()" style="display:flex;align-items:center;gap:5px;background:rgba(196,154,30,0.12);border:1.5px solid rgba(196,154,30,0.3);border-radius:20px;color:var(--gold);font-size:11px;font-weight:700;padding:7px 13px;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;white-space:nowrap;">📤 Export</button>
+      <label style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);border-radius:20px;color:var(--text2);font-size:11px;font-weight:700;padding:7px 13px;cursor:pointer;white-space:nowrap;">
+        📥 Import<input type="file" accept=".json" onchange="importData(event)" style="display:none;">
+      </label>
     </div>
 
     <!-- Calendar -->
@@ -795,6 +799,7 @@ textarea{min-height:130px;resize:vertical;line-height:1.65;}
         <div style="padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px;">
           <button class="btn-blue" onclick="viewFullReport()" style="font-size:14px;padding:14px;">🔍 View Full Report</button>
           <button class="btn-dl" id="dl-btn" onclick="reDownload()" style="font-size:14px;padding:14px;">⬇️ Download PDF Again</button>
+          <button class="btn-dl" onclick="if(state.result)shareFile(state.result.dataUri,state.result.fileName)" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,#1a6fa8,#2589cc);color:#fff;font-family:'Fraunces',serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:0;">📤 Share / Save to Drive</button>
           <button class="btn-outline" onclick="viewOnCal()" id="view-cal-btn" style="font-size:14px;padding:14px;">📅 View on Calendar</button>
           <button class="btn-outline" onclick="resetForm()" style="font-size:14px;padding:14px;">✍️ New Report</button>
         </div>
@@ -832,7 +837,8 @@ textarea{min-height:130px;resize:vertical;line-height:1.65;}
         <div style="font-size:12px;color:var(--text2);margin-top:5px;padding:0 24px;line-height:1.55;" id="as-filename">PDF saved to your phone</div>
       </div>
       <div style="padding:16px 16px 4px;display:flex;flex-direction:column;gap:10px;">
-        <a href="https://drive.google.com/drive/folders/1nuJWuqK0UGMCcHsS9TSviIEvVpE0D6yN" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:12px;padding:17px 16px;border-radius:14px;background:linear-gradient(135deg,#1c6e45,#22854f);color:#fff;font-family:'Fraunces',serif;font-size:16px;font-weight:700;text-decoration:none;box-shadow:0 4px 20px rgba(28,110,69,0.45);">☁️ Upload to Google Drive</a>
+        <button onclick="if(state.result)shareFile(state.result.dataUri,state.result.fileName)" style="display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:18px;border:none;border-radius:16px;background:linear-gradient(135deg,#1c6e45,#22a05a);color:#fff;font-family:'Fraunces',serif;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(28,110,69,0.45);">📤 Share PDF — Drive / Email / WhatsApp</button>
+        <a href="https://drive.google.com/drive/folders/1nuJWuqK0UGMCcHsS9TSviIEvVpE0D6yN" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px;border-radius:16px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);font-family:'Fraunces',serif;font-size:13px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,0.1);">☁️ Open Drive Folder</a>
         <a id="gcal-link" href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:12px;padding:17px 16px;border-radius:14px;background:linear-gradient(135deg,#1a4f9c,#2563c0);color:#fff;font-family:'Fraunces',serif;font-size:16px;font-weight:700;text-decoration:none;box-shadow:0 4px 20px rgba(26,79,156,0.45);">📅 Add to Google Calendar</a>
         <a href="https://sites.google.com/achievetogethercare.com/atcdocumentcalendar/home" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:12px;padding:17px 16px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Fraunces',serif;font-size:16px;font-weight:700;text-decoration:none;box-shadow:0 4px 20px rgba(196,154,30,0.4);">📊 Open ATC Document Calendar</a>
       </div>
@@ -900,22 +906,53 @@ let apiKey=loadApiKey();
 function toggleApiPanel(){
   const p=document.getElementById('api-panel');
   p.classList.toggle('hidden');
+  const inp=document.getElementById('api-key-input');
+  const statusEl=document.getElementById('api-status');
   if(!p.classList.contains('hidden')){
-    const inp=document.getElementById('api-key-input');
-    inp.value=apiKey?'sk-ant-...saved':'';
-    document.getElementById('api-status').textContent=apiKey?'✅ Key saved — enter new value to update':'No key saved yet';
+    if(apiKey){
+      inp.value='sk-ant-...'+apiKey.slice(-4);
+      statusEl.style.color='#34d48a';
+      statusEl.textContent='✅ Key saved: sk-ant-...'+apiKey.slice(-4)+' — tap Save to update';
+    } else {
+      inp.value='';
+      statusEl.style.color='';
+      statusEl.textContent='Paste your Anthropic API key above';
+    }
   }
 }
 function saveApiKey(){
-  const v=document.getElementById('api-key-input').value.trim();
-  if(v&&v!=='sk-ant-...saved'){
-    apiKey=v;
-    persistApiKey(v);
-    document.getElementById('api-status').textContent='✅ Saved — will persist across sessions!';
-  } else {
-    document.getElementById('api-status').textContent='✅ Key already saved';
+  const inp=document.getElementById('api-key-input');
+  const statusEl=document.getElementById('api-status');
+  const v=inp.value.trim();
+  if(!v||v==='sk-ant-...saved'){
+    statusEl.textContent='✅ Key already saved — generate a report to use it';
+    setTimeout(()=>document.getElementById('api-panel').classList.add('hidden'),2000);
+    return;
   }
-  setTimeout(()=>document.getElementById('api-panel').classList.add('hidden'),1200);
+  if(!v.startsWith('sk-ant-')){
+    statusEl.style.color='#ff6b5a';
+    statusEl.textContent='❌ Invalid key — must start with sk-ant-';
+    return;
+  }
+  apiKey=v;
+  // Save to all 3 storage methods
+  let saved=false;
+  try{localStorage.setItem('atc_api_key',v);saved=true;}catch(e){}
+  try{sessionStorage.setItem('atc_api_key',v);}catch(e){}
+  try{const exp=new Date();exp.setFullYear(exp.getFullYear()+5);document.cookie='atc_api_key='+encodeURIComponent(v)+';expires='+exp.toUTCString()+';path=/;SameSite=Strict';}catch(e){}
+  // Verify it actually saved
+  let verified=false;
+  try{verified=localStorage.getItem('atc_api_key')===v;}catch(e){}
+  const masked='sk-ant-...'+v.slice(-4);
+  if(verified){
+    statusEl.style.color='#34d48a';
+    statusEl.textContent='✅ Saved: '+masked+' — persists when you close the app';
+  } else {
+    statusEl.style.color='#f5d875';
+    statusEl.textContent='⚠️ Saved for this session only — open via GitHub Pages URL for permanent save';
+  }
+  inp.value=masked;
+  setTimeout(()=>document.getElementById('api-panel').classList.add('hidden'),2500);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -964,7 +1001,37 @@ function fmtDateLong(d){try{return new Date(d+'T12:00:00').toLocaleDateString('e
 function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
 function getWeekRange(dateStr){const d=new Date(dateStr+'T12:00:00');const dow=d.getDay();const mon=new Date(d);mon.setDate(d.getDate()-(dow===0?6:dow-1));const sun=new Date(mon);sun.setDate(mon.getDate()+6);const fmt=n=>n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');return{mon:fmt(mon),sun:fmt(sun)};}
 function inWeek(dateStr,anchorStr){if(!anchorStr)return false;const{mon,sun}=getWeekRange(anchorStr);return dateStr>=mon&&dateStr<=sun;}
-function androidDownload(dataUri,fileName){try{const a=document.createElement('a');a.href=dataUri;a.download=fileName||'document.pdf';a.style.cssText='position:fixed;opacity:0;top:0;left:0';document.body.appendChild(a);a.click();setTimeout(()=>{try{document.body.removeChild(a);}catch(e){}},500);}catch(e){window.open(dataUri,'_blank');}}
+function androidDownload(dataUri,fileName){
+  try{
+    const a=document.createElement('a');
+    a.href=dataUri;a.download=fileName||'document.pdf';
+    a.style.cssText='position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{try{document.body.removeChild(a);}catch(e){}},500);
+  }catch(e){window.open(dataUri,'_blank');}
+}
+
+async function shareFile(dataUri, fileName){
+  try{
+    // Convert dataURI to blob
+    const res = await fetch(dataUri);
+    const blob = await res.blob();
+    const file = new File([blob], fileName||'report.pdf', {type:'application/pdf'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({
+        title: fileName||'ATC Report',
+        text: 'Achieve Together Care — Shaun Case report',
+        files: [file]
+      });
+    } else {
+      // Fallback: just download
+      androidDownload(dataUri, fileName);
+      alert('Share not supported on this browser — file downloaded instead.');
+    }
+  } catch(e){
+    if(e.name!=='AbortError') androidDownload(dataUri, fileName);
+  }
+}
 
 // ═══════════════════════════════════════════════════════════
 // PDF FUNCTIONS
@@ -1555,6 +1622,63 @@ function resetForm(){state.result=null;document.getElementById('result-area').cl
 // ═══════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════
+
+function exportData(){
+  try{
+    const data={
+      reports: STORE,
+      apiKey: apiKey,
+      exportedAt: new Date().toISOString(),
+      version: '1.0'
+    };
+    const json=JSON.stringify(data,null,2);
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='ATC_Reports_Backup_'+new Date().toISOString().slice(0,10)+'.json';
+    a.style.cssText='position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},500);
+    // Show confirmation
+    const icon=document.getElementById('sync-icon');
+    if(icon){const orig=icon.textContent;icon.textContent='✅';setTimeout(()=>icon.textContent=orig,2000);}
+  }catch(e){alert('Export failed: '+e.message);}
+}
+
+function importData(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.reports){alert('Invalid backup file.');return;}
+      // Merge reports (don't overwrite, merge by date)
+      let added=0;
+      Object.keys(data.reports).forEach(date=>{
+        if(!STORE[date])STORE[date]=[];
+        data.reports[date].forEach(rep=>{
+          // Avoid duplicates by checking fileName
+          const exists=STORE[date].some(r=>r.fileName===rep.fileName);
+          if(!exists){STORE[date].push(rep);added++;}
+        });
+      });
+      localStorage.setItem('atc_reports',JSON.stringify(STORE));
+      // Restore API key if not already set
+      if(data.apiKey&&!apiKey){
+        apiKey=data.apiKey;
+        persistApiKey(data.apiKey);
+      }
+      updateStats();renderCal();
+      alert('✅ Imported '+added+' reports successfully!');
+    }catch(err){alert('Import failed: '+err.message);}
+  };
+  reader.readAsText(file);
+  // Reset input so same file can be imported again
+  event.target.value='';
+}
 window.onload=function(){
   const t=todayStr();
   ['f-date','si-sdate','si-date','wi-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=t;});
