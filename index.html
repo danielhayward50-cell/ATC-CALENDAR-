@@ -2,1829 +2,759 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ATC Report Generator</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300;1,500&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATC Shift Report Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;1,400&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-:root{
-  --navy:#0a1628;
-  --navy2:#0f1e38;
-  --navy3:#162340;
-  --navy4:#1d2e50;
-  --gold:#c49a1e;
-  --gold2:#e8bc3a;
-  --gold3:#f5d875;
-  --blue:#1a4f9c;
-  --blue2:#2563c0;
-  --green:#1c6e45;
-  --green2:#22854f;
-  --red:#b02e1a;
-  --red2:#d63b22;
-  --purple:#5b2d8e;
-  --purple2:#7038b0;
-  --glass:rgba(255,255,255,0.04);
-  --glass2:rgba(255,255,255,0.07);
-  --border:rgba(255,255,255,0.08);
-  --border2:rgba(196,154,30,0.25);
-  --text:#f0ece3;
-  --text2:#a8a090;
-  --text3:#6b6258;
-  --radius:14px;
-  --radius2:10px;
+:root {
+  --blue:#1a4fa0;--blue-light:#2563eb;--blue-dark:#0a1830;
+  --gold:#c9a84c;--gold-light:#e4c06e;
+  --bg:#070c18;--surface:#0d1525;--surface2:#131f35;--surface3:#1a2840;
+  --border:#1c3356;--border-light:#254070;
+  --text:#e2eaf5;--muted:#5a7a9a;--muted2:#8aaccc;
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --radius:12px;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{width:100%;min-height:100%;background:var(--navy);font-family:'Cabinet Grotesk',sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;}
-button,input,select,textarea{font-family:'Cabinet Grotesk',sans-serif;font-size:14px;}
-#app{min-height:100vh;padding-bottom:40px;position:relative;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Cabinet Grotesk',system-ui,sans-serif;
+  min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(26,79,160,0.18) 0%, transparent 70%);
+}
 
-/* ── Ambient background ── */
-#app::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% -10%,rgba(26,79,156,0.18) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 90% 110%,rgba(196,154,30,0.08) 0%,transparent 50%);pointer-events:none;z-index:0;}
-
-.hidden{display:none!important;}
-
-/* ── HEADER ── */
-#hdr{
-  background:rgba(10,22,40,0.92);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  height:64px;
-  display:flex;align-items:center;gap:10px;
-  padding:0 16px;
-  border-bottom:1px solid var(--border2);
-  position:sticky;top:0;z-index:200;
-}
-#hdr-logo{
-  width:40px;height:40px;border-radius:50%;
-  background:linear-gradient(135deg,var(--navy3),var(--navy4));
-  border:1.5px solid var(--gold);
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;flex-shrink:0;
-  box-shadow:0 0 12px rgba(196,154,30,0.2);
-}
-#hdr-info{flex:1;}
-#hdr-info .t1{color:var(--text);font-family:'Fraunces',serif;font-weight:700;font-size:14px;letter-spacing:0.2px;}
-#hdr-info .t2{color:var(--gold);font-size:10px;font-weight:500;letter-spacing:0.8px;text-transform:uppercase;margin-top:1px;}
-.hdr-btn{
-  background:linear-gradient(135deg,var(--gold),var(--gold2));
-  color:var(--navy);border:none;border-radius:8px;
-  padding:8px 14px;font-weight:800;font-size:11px;
-  cursor:pointer;white-space:nowrap;letter-spacing:0.3px;
-  box-shadow:0 2px 8px rgba(196,154,30,0.3);
-  transition:all .2s;
-}
-.hdr-btn:active{transform:scale(0.96);}
-.hdr-btn-out{
-  background:transparent;color:var(--gold);
-  border:1.5px solid rgba(196,154,30,0.4);
-  border-radius:8px;padding:7px 11px;font-weight:700;font-size:12px;cursor:pointer;
-  transition:all .2s;
-}
-.hdr-btn-out:active{background:rgba(196,154,30,0.1);}
-
-/* ── SCREENS ── */
-.screen{display:none;padding:16px 14px 60px;position:relative;z-index:1;}
-.screen.active{display:block;}
-
-/* ── CARDS ── */
-.card{
-  background:var(--glass2);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  margin-bottom:12px;
-  overflow:hidden;
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
-}
-.card-h{
-  background:rgba(255,255,255,0.05);
+/* \u2500\u2500 HEADER \u2500\u2500 */
+header{
+  background:linear-gradient(180deg,rgba(10,24,48,0.98),rgba(7,12,24,0.95));
   border-bottom:1px solid var(--border);
-  padding:12px 16px;
-  font-family:'Fraunces',serif;font-size:12px;
-  color:var(--gold);font-weight:500;
-  letter-spacing:1.2px;text-transform:uppercase;
+  padding:14px 28px;
+  display:flex;align-items:center;gap:16px;
+  position:sticky;top:0;z-index:200;
+  backdrop-filter:blur(20px);
 }
-.card-b{padding:14px 16px;}
+.logo{
+  width:44px;height:44px;
+  background:linear-gradient(135deg,var(--blue-light),var(--blue));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-family:'Fraunces',serif;font-weight:700;font-size:17px;color:white;
+  box-shadow:0 4px 16px rgba(37,99,235,0.35);flex-shrink:0;
+}
+.header-text h1{font-size:1.1rem;font-weight:800;letter-spacing:-0.02em;}
+.header-text p{font-size:0.72rem;color:var(--muted2);margin-top:1px;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.sync-badge{
+  display:flex;align-items:center;gap:7px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;padding:6px 14px;font-size:0.72rem;color:var(--muted2);
+  cursor:pointer;transition:border-color 0.2s;
+}
+.sync-badge:hover{border-color:var(--blue-light);}
+.dot{width:7px;height:7px;border-radius:50%;background:#374151;transition:all 0.3s;}
+.dot.live{background:var(--green);box-shadow:0 0 8px var(--green);}
 
-/* ── INPUTS ── */
-.lbl{
-  display:block;font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:0.8px;
-  color:var(--text2);margin-bottom:6px;
+/* \u2500\u2500 LAYOUT \u2500\u2500 */
+.container{max-width:880px;margin:0 auto;padding:28px 20px 60px;}
+
+/* \u2500\u2500 STATS BAR \u2500\u2500 */
+.stats-bar{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;
 }
-input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{
-  width:100%;
-  padding:11px 13px;
-  border:1px solid var(--border);
-  border-radius:var(--radius2);
-  font-size:13.5px;
-  color:var(--text);
-  background:rgba(255,255,255,0.06);
-  -webkit-appearance:none;
-  transition:border-color .2s,background .2s;
-  caret-color:var(--gold);
+.stat{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:12px 16px;text-align:center;
+  transition:border-color 0.2s;
+}
+.stat:hover{border-color:var(--border-light);}
+.stat-val{font-size:1.3rem;font-weight:800;color:var(--blue-light);font-family:'Fraunces',serif;}
+.stat-lbl{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-top:2px;}
+
+/* \u2500\u2500 CARDS \u2500\u2500 */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:22px;margin-bottom:16px;
+  transition:border-color 0.2s;
+}
+.card:hover{border-color:var(--border-light);}
+.card-title{
+  display:flex;align-items:center;gap:9px;
+  font-size:0.73rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:0.1em;color:var(--blue-light);
+  margin-bottom:18px;padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+.card-title svg{flex-shrink:0;opacity:0.8;}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px;}
+.full{grid-column:1/-1;}
+
+label{
+  display:block;font-size:0.7rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.07em;
+  color:var(--muted);margin-bottom:5px;
+}
+input,select,textarea{
+  width:100%;background:var(--surface2);
+  border:1.5px solid var(--border);border-radius:9px;
+  padding:10px 13px;color:var(--text);font-size:0.88rem;
+  font-family:'Cabinet Grotesk',sans-serif;
+  outline:none;transition:border-color 0.2s,background 0.2s;
 }
 input:focus,select:focus,textarea:focus{
-  outline:none;
-  border-color:rgba(196,154,30,0.5);
-  background:rgba(255,255,255,0.08);
+  border-color:var(--blue-light);background:var(--surface3);
 }
-input::placeholder,textarea::placeholder{color:var(--text3);}
-select option{background:#1a2a45;color:var(--text);}
-textarea{min-height:130px;resize:vertical;line-height:1.65;}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+textarea{resize:vertical;min-height:80px;line-height:1.55;}
+select option{background:var(--surface2);}
+input[type=time],input[type=date]{color-scheme:dark;}
 
-/* ── TYPE PILLS ── */
-.pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
-.pill{
-  padding:9px 16px;border-radius:20px;
-  font-size:12px;font-weight:700;cursor:pointer;
-  border:1.5px solid var(--border);
-  background:var(--glass);color:var(--text2);
-  transition:all .2s;
+.row-check{display:flex;align-items:center;gap:9px;cursor:pointer;padding:3px 0;}
+.row-check input[type=checkbox]{width:17px;height:17px;accent-color:var(--blue-light);flex-shrink:0;}
+.row-check span{font-size:0.86rem;}
+
+/* mood pills */
+.mood-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+.mood-chip{
+  padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);
+  font-size:0.78rem;font-weight:700;cursor:pointer;background:transparent;
+  color:var(--muted2);transition:all 0.15s;
 }
-.pill.active-shift{background:rgba(26,79,156,0.25);border-color:var(--blue2);color:#7eb3ff;}
-.pill.active-weekly{background:rgba(28,110,69,0.25);border-color:var(--green2);color:#6ecf9a;}
-.pill.active-incident{background:rgba(176,46,26,0.25);border-color:var(--red2);color:#ff8a75;}
-.pill.active-invoice{background:rgba(91,45,142,0.25);border-color:var(--purple2);color:#c09af5;}
+.mood-chip.sel{color:white;border-color:transparent;}
+.mood-chip[data-mood="positive"].sel{background:#16a34a;}
+.mood-chip[data-mood="neutral"].sel{background:#2563eb;}
+.mood-chip[data-mood="anxious"].sel{background:#d97706;}
+.mood-chip[data-mood="agitated"].sel{background:#dc2626;}
+.mood-chip[data-mood="withdrawn"].sel{background:#7c3aed;}
+.mood-chip[data-mood="distressed"].sel{background:#9f1239;}
 
-/* ── BUTTONS ── */
+/* \u2500\u2500 ACTION AREA \u2500\u2500 */
+.actions{
+  background:linear-gradient(135deg,#0d1f40,#070c18);
+  border:1px solid var(--blue);border-radius:14px;
+  padding:22px;margin-bottom:16px;
+}
+.actions .card-title{color:var(--gold);}
+.btn-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;margin-bottom:11px;}
+.btn{
+  padding:12px 16px;border-radius:10px;border:none;cursor:pointer;
+  font-family:'Cabinet Grotesk',sans-serif;
+  font-size:0.83rem;font-weight:800;letter-spacing:0.02em;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:all 0.18s;
+}
+.btn:disabled{opacity:0.35;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
 .btn-gen{
-  width:100%;padding:17px;border:none;border-radius:var(--radius);
-  color:var(--navy);font-family:'Fraunces',serif;font-size:15px;font-weight:700;
-  cursor:pointer;margin-bottom:14px;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  letter-spacing:0.3px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.3);
-  transition:all .2s;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--blue-light),#1d40af);
+  color:white;width:100%;padding:14px;font-size:0.9rem;margin-bottom:11px;
 }
-.btn-gen::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(255,255,255,0.12) 0%,transparent 60%);
-  pointer-events:none;
+.btn-gen:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,99,235,0.4);}
+.btn-preview{background:var(--surface2);color:var(--text);border:1.5px solid var(--border);}
+.btn-preview:hover{border-color:var(--blue-light);color:var(--blue-light);}
+.btn-cal{background:linear-gradient(135deg,#16a34a,#15803d);color:white;}
+.btn-cal:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(22,163,74,0.4);}
+.btn-drive{background:linear-gradient(135deg,#0f4c8a,#1a6dbf);color:white;}
+.btn-drive:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(15,76,138,0.4);}
+.btn-both{
+  background:linear-gradient(135deg,var(--gold),#b7862d);
+  color:#000;width:100%;font-size:0.9rem;padding:14px;
 }
-.btn-gen:active{transform:scale(0.98);}
+.btn-both:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,168,76,0.4);}
 
-.btn-dl,.btn-green,.btn-gold,.btn-blue,.btn-purple{
-  width:100%;padding:14px;border:none;border-radius:var(--radius2);
-  font-family:'Fraunces',serif;font-size:13.5px;font-weight:700;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  gap:8px;margin-bottom:8px;text-decoration:none;
-  transition:all .2s;position:relative;overflow:hidden;
-  letter-spacing:0.2px;
-}
-.btn-dl{background:var(--glass2);color:var(--text);border:1px solid var(--border);}
-.btn-dl:active{background:var(--glass);}
-.btn-green{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;box-shadow:0 3px 12px rgba(28,110,69,0.4);}
-.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);box-shadow:0 3px 12px rgba(196,154,30,0.35);}
-.btn-blue{background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;box-shadow:0 3px 12px rgba(26,79,156,0.4);}
-.btn-purple{background:linear-gradient(135deg,var(--purple),var(--purple2));color:#fff;box-shadow:0 3px 12px rgba(91,45,142,0.4);}
-.btn-outline{
-  padding:13px;border:1px solid var(--border);
-  border-radius:var(--radius2);background:transparent;
-  color:var(--text2);font-family:'Fraunces',serif;
-  font-size:13px;font-weight:700;cursor:pointer;width:100%;
-  transition:all .2s;
-}
-.btn-outline:active{background:var(--glass2);}
-.btn-green:active,.btn-gold:active,.btn-blue:active,.btn-purple:active{transform:scale(0.98);}
-
-/* ── ALERTS ── */
-.err{
-  background:rgba(176,46,26,0.15);
-  border:1px solid rgba(176,46,26,0.4);
-  border-radius:var(--radius2);padding:11px 14px;
-  font-size:12.5px;color:#ff8a75;margin-bottom:12px;
-}
-.info{
-  background:rgba(26,79,156,0.15);
-  border-radius:8px;padding:9px 13px;
-  font-size:12px;color:#7eb3ff;font-weight:600;margin-top:8px;
-}
-.tip{
-  background:rgba(196,154,30,0.1);
-  border:1px solid rgba(196,154,30,0.25);
-  border-radius:8px;padding:10px 13px;
-  font-size:12px;color:#c49a1e;margin-bottom:10px;
-  line-height:1.55;
-}
-
-/* ── STAT CARD ── */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;}
-.stat-cell{padding:18px 10px;text-align:center;border-right:1px solid var(--border);}
-.stat-cell:last-child{border-right:none;}
-.stat-n{font-size:34px;font-weight:700;font-family:'Fraunces',serif;line-height:1;}
-.stat-l{font-size:8.5px;font-weight:700;color:var(--text3);letter-spacing:1.2px;margin-top:4px;text-transform:uppercase;}
-
-/* ── CALENDAR ── */
-#cal-wrap{
-  background:linear-gradient(160deg,#0d1e3a,#0a1628);
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:var(--radius);
-  overflow:hidden;margin-bottom:14px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.4);
-}
-#cal-nav{
-  background:linear-gradient(135deg,#1a3060,#0f1e38);
-  border-bottom:2px solid rgba(196,154,30,0.3);
-  padding:16px 18px;
-  display:flex;align-items:center;justify-content:space-between;
-}
-.cal-nav-arrow{
-  width:38px;height:38px;border-radius:50%;
-  background:rgba(196,154,30,0.12);
-  border:1.5px solid rgba(196,154,30,0.3);
-  color:var(--gold);font-size:20px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .2s;-webkit-tap-highlight-color:transparent;
-}
-.cal-nav-arrow:active{background:rgba(196,154,30,0.25);transform:scale(0.92);}
-.cal-nav-center{text-align:center;}
-#cal-month{color:var(--text);font-family:'Fraunces',serif;font-size:18px;font-weight:500;display:block;}
-#cal-year-label{color:var(--gold);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:2px;display:block;}
-#cal-daynames{display:grid;grid-template-columns:repeat(7,1fr);background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.06);}
-.cal-dn{
-  text-align:center;padding:9px 0;
-  font-size:9px;font-weight:800;
-  color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;
-}
-.cal-dn.weekend{color:rgba(196,154,30,0.6);}
-#cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;background:rgba(255,255,255,0.03);padding:4px;}
-.cal-cell{
-  background:rgba(255,255,255,0.03);
-  min-height:64px;
-  border-radius:8px;
-  display:flex;flex-direction:column;
-  align-items:center;
-  padding:6px 2px 4px;
-  cursor:pointer;position:relative;
-  -webkit-tap-highlight-color:transparent;
-  transition:all .18s;
-  border:1.5px solid transparent;
-}
-.cal-cell:active{transform:scale(0.93);background:rgba(196,154,30,0.08);}
-.cal-cell .cn{font-size:14px;color:rgba(255,255,255,0.45);line-height:1;font-weight:600;margin-bottom:3px;}
-.cal-cell.weekend-col .cn{color:rgba(196,154,30,0.5);}
-.cal-cell.today{background:rgba(196,154,30,0.12);border-color:rgba(196,154,30,0.5);}
-.cal-cell.today .cn{color:var(--gold);font-weight:800;}
-.cal-cell.sel{
-  background:linear-gradient(135deg,rgba(196,154,30,0.25),rgba(196,154,30,0.1));
-  border-color:var(--gold);
-  box-shadow:0 0 12px rgba(196,154,30,0.2);
-}
-.cal-cell.sel .cn{color:var(--gold);font-weight:900;}
-.cal-cell.inweek{background:rgba(26,79,156,0.15);border-color:rgba(37,99,192,0.25);}
-.cal-cell.inweek .cn{color:#90c0ff;font-weight:700;}
-.cal-cell.has-docs{background:rgba(255,255,255,0.06);}
-.cal-cell.has-docs .cn{color:rgba(255,255,255,0.75);}
-.cal-cell.empty{background:transparent;cursor:default;border-color:transparent;}
-/* Report badges on cell */
-.cal-badges{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;width:100%;padding:0 2px;}
-.cal-badge{
-  width:8px;height:8px;border-radius:50%;flex-shrink:0;
-}
-.cal-badge.shift{background:#4a9eff;}
-.cal-badge.weekly{background:#34d48a;}
-.cal-badge.incident{background:#ff6b5a;}
-.cal-badge.invoice{background:#c09af5;}
-/* Swipe hint */
-.cal-legend{
-  padding:10px 16px;
-  display:flex;gap:14px;flex-wrap:wrap;
-  font-size:10px;color:var(--text3);font-weight:600;
-  border-top:1px solid rgba(255,255,255,0.06);
-  background:rgba(0,0,0,0.2);
-}
-.cal-legend-item{display:flex;align-items:center;gap:5px;}
-.cal-legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
-
-/* ── DOC QUICK BUTTONS ── */
-.doc-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;}
-.doc-btn{
-  display:flex;flex-direction:column;align-items:center;
-  gap:6px;padding:18px 4px;
-  background:transparent;border:none;
-  border-right:1px solid var(--border);
-  cursor:pointer;-webkit-tap-highlight-color:transparent;
-  transition:background .15s;
-}
-.doc-btn:last-child{border-right:none;}
-.doc-btn:active{background:var(--glass2);}
-.doc-btn .di{font-size:22px;}
-.doc-btn .dl{font-size:10px;font-weight:700;letter-spacing:0.3px;}
-
-/* ── API KEY PANEL ── */
-#api-panel{
-  background:rgba(10,22,40,0.95);
-  border-bottom:1px solid var(--border2);
-  padding:13px 16px;
-  backdrop-filter:blur(10px);
-}
-#api-panel input{
-  background:rgba(255,255,255,0.07);
-  border:1px solid rgba(196,154,30,0.3);
-  color:var(--text);border-radius:8px;
-  padding:10px 13px;font-size:13px;
-}
-
-/* ── TYPE BADGE ── */
-#type-badge{
-  border-radius:var(--radius2);padding:10px 14px;
-  font-size:12px;font-weight:700;margin-bottom:10px;
-  text-align:center;border:1px solid;letter-spacing:0.3px;
-}
-
-/* ── RESULT AREA ── */
-.result-success-hdr{
-  padding:20px 18px;
-  display:flex;align-items:center;gap:14px;
-  border-bottom:1px solid var(--border);
-}
-.result-icon{
-  width:48px;height:48px;border-radius:50%;
-  background:rgba(28,110,69,0.2);
-  border:1.5px solid var(--green2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:22px;flex-shrink:0;
-}
-
-/* ── REPORT PREVIEW ── */
-.rpt-preview{
-  border:1px solid var(--border);
-  border-radius:var(--radius2);
-  overflow:hidden;max-height:500px;overflow-y:auto;
-}
-.rpt-preview::-webkit-scrollbar{width:3px;}
-.rpt-preview::-webkit-scrollbar-track{background:transparent;}
-.rpt-preview::-webkit-scrollbar-thumb{background:rgba(196,154,30,0.3);border-radius:2px;}
-.rpt-mini-hdr{background:var(--navy);padding:12px 14px;}
-.rpt-sec-hd{background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);}
-.rpt-sec-hd span{color:var(--gold);font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:7px 14px;display:block;}
-.rpt-sec-body{padding:10px 14px;background:#fff;}
-.rpt-sec-body.alt{background:#f8f9fc;}
-.rpt-bullet{display:flex;gap:8px;margin-bottom:6px;font-size:11.5px;color:#1a2a4a;line-height:1.65;}
-
-/* ── FULL REPORT MODAL ── */
-#report-modal{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;background:var(--navy);}
-#report-modal-hdr{
-  background:rgba(10,22,40,0.98);
-  border-bottom:1px solid var(--border2);
-  padding:12px 16px;
-  display:flex;align-items:center;justify-content:space-between;
-  flex-shrink:0;
-  backdrop-filter:blur(20px);
-}
-#report-modal-body{flex:1;overflow-y:auto;background:#fff;}
-#report-modal-footer{
-  background:rgba(10,22,40,0.98);
-  border-top:1px solid var(--border2);
-  padding:10px 16px;
-  display:flex;gap:8px;
-  flex-shrink:0;
-}
-
-/* ── SPINNER ── */
-@keyframes spin{to{transform:rotate(360deg);}}
-.spinner{width:20px;height:20px;border:2.5px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
-
-/* ── DAY PANEL ── */
-.day-panel{
-  background:var(--glass2);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  margin-bottom:14px;overflow:hidden;
-}
-.rep-card{border-radius:var(--radius2);overflow:hidden;margin-bottom:10px;border:1px solid var(--border);}
-
-/* ── WEEK INVOICE DAYS ── */
-.day-row{
-  border:1px solid var(--border);
-  border-radius:var(--radius2);
-  padding:12px 13px;margin-bottom:8px;
-  background:rgba(255,255,255,0.03);
-}
-.day-row.inactive{opacity:.45;}
-
-/* ── SECTION DIVIDER ── */
-.sec-divider{
-  display:flex;align-items:center;gap:10px;
-  margin:18px 0 12px;
-}
-.sec-divider::before,.sec-divider::after{content:'';flex:1;height:1px;background:var(--border);}
-.sec-divider span{color:var(--text3);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
-
-/* ── ANIMATED ENTRY ── */
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
-.screen.active .card,.screen.active #cal-wrap{animation:fadeUp .3s ease both;}
-.screen.active .card:nth-child(2){animation-delay:.05s;}
-.screen.active .card:nth-child(3){animation-delay:.1s;}
-
-/* ── INV MODE BUTTONS ── */
-.inv-mode-btn{
-  flex:1;padding:11px;border-radius:var(--radius2);
-  border:1.5px solid var(--border);
-  background:var(--glass);color:var(--text2);
-  font-weight:700;cursor:pointer;font-size:13px;
-}
-.inv-mode-btn.active{border-color:var(--purple2);background:rgba(91,45,142,0.2);color:#c09af5;}
-
-/* ── SCROLLBAR GLOBAL ── */
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(196,154,30,0.2);border-radius:2px;}
-
-/* ── CALENDAR POPUP MODAL ── */
-#cal-popup-overlay{
-  position:fixed;inset:0;z-index:10000;
-  background:rgba(5,12,25,0.75);
+/* \u2500\u2500 MODAL \u2500\u2500 */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.88);
+  z-index:500;display:none;align-items:center;justify-content:center;
   backdrop-filter:blur(6px);
-  -webkit-backdrop-filter:blur(6px);
-  display:flex;align-items:flex-end;justify-content:center;
-  padding-bottom:0;
-  animation:overlayIn .25s ease both;
 }
-@keyframes overlayIn{from{opacity:0;}to{opacity:1;}}
-#cal-popup{
-  background:linear-gradient(160deg,#111e38,#0a1628);
-  border:1px solid var(--border2);
-  border-bottom:none;
-  border-radius:22px 22px 0 0;
-  padding:8px 0 0;
-  width:100%;max-width:500px;
-  animation:sheetUp .3s cubic-bezier(.22,.68,0,1.2) both;
-  box-shadow:0 -8px 40px rgba(0,0,0,0.5),0 0 0 1px rgba(196,154,30,0.1);
+.overlay.open{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;width:min(760px,95vw);max-height:92vh;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,0.6);
 }
-@keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
-.popup-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,0.15);margin:0 auto 20px;}
-.popup-icon{
-  width:64px;height:64px;border-radius:50%;
-  background:linear-gradient(135deg,rgba(196,154,30,0.15),rgba(196,154,30,0.05));
-  border:1.5px solid rgba(196,154,30,0.4);
-  display:flex;align-items:center;justify-content:center;
-  font-size:28px;margin:0 auto 16px;
-  box-shadow:0 0 20px rgba(196,154,30,0.15);
+.modal-hd{
+  padding:18px 22px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(135deg,#0d1f40,var(--bg));flex-shrink:0;
 }
-.popup-title{font-family:'Fraunces',serif;font-size:20px;font-weight:500;color:var(--text);text-align:center;margin-bottom:6px;}
-.popup-sub{font-size:12px;color:var(--text2);text-align:center;line-height:1.55;margin-bottom:8px;padding:0 20px;}
-.popup-doc-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  background:rgba(196,154,30,0.1);border:1px solid rgba(196,154,30,0.25);
-  border-radius:20px;padding:5px 14px;
-  font-size:11px;color:var(--gold);font-weight:700;letter-spacing:0.3px;
-  margin:0 auto 20px;
+.modal-hd h3{font-size:1rem;font-weight:800;font-family:'Fraunces',serif;}
+.modal-close{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  transition:all 0.15s;
 }
-.popup-btn-row{display:flex;flex-direction:column;gap:8px;padding:0 16px 12px;}
-.popup-btn-open{
-  padding:16px;border:none;border-radius:var(--radius);
-  background:linear-gradient(135deg,var(--gold),var(--gold2));
-  color:var(--navy);font-family:'Fraunces',serif;font-size:15px;font-weight:700;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
-  box-shadow:0 4px 16px rgba(196,154,30,0.35);
-  transition:all .2s;letter-spacing:0.2px;
+.modal-close:hover{background:#ef444420;border-color:var(--red);color:var(--red);}
+.modal-body{padding:22px;overflow-y:auto;flex:1;}
+.modal-ft{
+  padding:15px 22px;border-top:1px solid var(--border);
+  display:flex;gap:10px;flex-wrap:wrap;background:var(--surface);flex-shrink:0;
 }
-.popup-btn-open:active{transform:scale(0.98);}
-.popup-btn-skip{
-  padding:14px;border:1px solid var(--border);border-radius:var(--radius);
-  background:transparent;color:var(--text2);
-  font-family:'Fraunces',serif;font-size:14px;font-weight:500;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:all .2s;
-}
-.popup-btn-skip:active{background:var(--glass2);}
-.popup-safe-area{height:env(safe-area-inset-bottom,0px);min-height:16px;}
+.modal-ft .btn{flex:1;min-width:130px;}
 
-/* ── ENHANCED RESULT CARD ── */
-.result-glow{
-  position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--green),var(--gold),var(--green));
-  background-size:200%;
-  animation:shimmer 2s linear infinite;
+/* Report preview */
+#reportBox{
+  background:#111827;border-radius:10px;padding:20px 24px;
+  font-family:'Fraunces',serif;font-size:0.91rem;line-height:1.75;
+  color:#d1dff0;border:1px solid #1e3a5f;white-space:pre-wrap;
+  max-height:440px;overflow-y:auto;
 }
-@keyframes shimmer{to{background-position:200% center;}}
+#reportBox .rpt-header{
+  text-align:center;border-bottom:1px solid #1e3a5f;
+  padding-bottom:14px;margin-bottom:16px;
+}
+#reportBox .rpt-header h2{
+  font-size:1.1rem;font-weight:700;color:#e2eaf5;
+}
+#reportBox .rpt-header p{font-size:0.8rem;color:#5a7a9a;margin-top:3px;}
+#reportBox .rpt-section{margin-bottom:14px;}
+#reportBox .rpt-label{
+  font-family:'Cabinet Grotesk',sans-serif;
+  font-size:0.68rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:0.1em;color:#2563eb;margin-bottom:4px;
+}
+#reportBox .rpt-text{color:#c8d8ec;}
 
-/* ── BOTTOM NAV ── */
-#bottom-nav{
-  position:fixed;bottom:0;left:0;right:0;z-index:150;
-  background:rgba(8,16,32,0.95);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  border-top:1px solid var(--border2);
-  display:flex;
-  padding-bottom:env(safe-area-inset-bottom,0px);
+/* Calendar event preview */
+.cal-preview{
+  background:var(--surface2);border:1px solid rgba(34,197,94,0.3);
+  border-radius:10px;padding:16px;margin-bottom:16px;
 }
-.nav-tab{
-  flex:1;display:flex;flex-direction:column;align-items:center;
-  gap:4px;padding:10px 4px;
-  background:transparent;border:none;cursor:pointer;
-  transition:all .2s;-webkit-tap-highlight-color:transparent;
+.cal-preview h4{
+  color:var(--green);font-size:0.72rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;
+  display:flex;align-items:center;gap:7px;
 }
-.nav-tab.active{color:var(--gold);}
-.nav-tab .ni{font-size:20px;line-height:1;}
-.nav-tab .nl{font-size:10px;font-weight:700;letter-spacing:0.5px;}
-.nav-tab-bar{height:2px;width:24px;border-radius:1px;background:var(--gold);opacity:0;transition:opacity .2s;margin-top:2px;}
-.nav-tab.active .nav-tab-bar{opacity:1;}
+.cal-row{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  font-size:0.84rem;padding:5px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.cal-row:last-child{border-bottom:none;}
+.cal-row .k{color:var(--muted2);}
+.cal-row .v{color:var(--text);font-weight:600;text-align:right;max-width:55%;}
+
+/* \u2500\u2500 TOAST \u2500\u2500 */
+.toast{
+  position:fixed;bottom:22px;right:22px;z-index:9999;
+  padding:12px 18px;border-radius:10px;font-size:0.84rem;font-weight:700;
+  display:flex;align-items:center;gap:9px;
+  transform:translateY(60px);opacity:0;
+  transition:all 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,0.5);
+  font-family:'Cabinet Grotesk',sans-serif;
+}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{background:#15803d;color:white;border:1px solid var(--green);}
+.toast.error{background:#991b1b;color:white;border:1px solid var(--red);}
+.toast.info{background:#1e3a8a;color:white;border:1px solid var(--blue-light);}
+
+/* \u2500\u2500 SPINNER \u2500\u2500 */
+.spinner{
+  width:18px;height:18px;border:2.5px solid rgba(255,255,255,0.3);
+  border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;
+  display:none;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* \u2500\u2500 LOADING OVERLAY \u2500\u2500 */
+#loadingOverlay{
+  position:fixed;inset:0;background:rgba(7,12,24,0.92);
+  z-index:1000;display:none;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;
+}
+#loadingOverlay.show{display:flex;}
+#loadingOverlay .spinner{display:block;width:36px;height:36px;border-width:3.5px;}
+#loadingOverlay p{color:var(--muted2);font-size:0.88rem;font-weight:600;}
+
+@media(max-width:620px){
+  .stats-bar{grid-template-columns:1fr 1fr;}
+  .g2,.g3{grid-template-columns:1fr;}
+  .btn-row{grid-template-columns:1fr;}
+  .full{grid-column:unset;}
+}
 </style>
 </head>
 <body>
-<div id="app">
 
-  <!-- HEADER -->
-  <div id="hdr">
-    <div id="hdr-logo">👥</div>
-    <div id="hdr-info">
-      <div class="t1">Achieve Together Care</div>
-      <div class="t2">Report & Invoice Generator</div>
-    </div>
-    <button class="hdr-btn-out" onclick="toggleApiPanel()">🔑</button>
-    <button class="hdr-btn" onclick="showScreen('calendar')">Cal</button>
-    <button class="hdr-btn" onclick="showScreen('form')">New</button>
-      <button onclick="autoGenerateWeekly()" style="background:linear-gradient(135deg,#1c6e45,#22a05a);border:none;border-radius:20px;color:#fff;padding:8px 14px;font-weight:800;font-size:11px;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;white-space:nowrap;">📅 Weekly</button>
-  </div>
-
-  <!-- API KEY PANEL -->
-  <div id="api-panel" class="hidden">
-    <div style="color:var(--gold);font-size:11px;font-weight:700;margin-bottom:8px;letter-spacing:0.5px;">🔑 ANTHROPIC API KEY — SAVED LOCALLY</div>
-    <div style="display:flex;gap:8px;">
-      <input type="password" id="api-key-input" placeholder="sk-ant-..." style="flex:1;">
-    </div>
-    <div id="api-status" style="color:var(--text3);font-size:10px;margin-top:6px;"></div>
-  </div>
-
-  <!-- ══════════════════════════════════════════ -->
-  <!-- CALENDAR SCREEN -->
-  <!-- ══════════════════════════════════════════ -->
-  <div id="screen-calendar" class="screen active">
-
-    <!-- Hero stats card -->
-    <div class="card" style="margin-bottom:14px;">
-      <div style="padding:18px 18px 14px;background:linear-gradient(135deg,rgba(26,46,70,0.8),rgba(15,30,56,0.6));border-bottom:1px solid var(--border);">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
-          <div>
-            <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:500;color:var(--text);line-height:1.2;">Achieve Together Care</div>
-            <div style="font-size:10px;color:var(--gold);margin-top:3px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;">Document Calendar</div>
-          </div>
-          <div style="background:rgba(196,154,30,0.1);border:1px solid rgba(196,154,30,0.25);border-radius:10px;padding:8px 14px;text-align:right;">
-            <div style="font-family:'Fraunces',serif;font-size:13px;color:var(--text);font-weight:500;">Shaun Case</div>
-            <div style="font-size:9px;color:var(--gold);margin-top:2px;letter-spacing:0.8px;">NDIS #432005774</div>
-          </div>
-        </div>
-        <!-- legend -->
-        <div style="display:flex;gap:12px;">
-          <span style="font-size:10px;color:#7eb3ff;font-weight:700;display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--blue2);display:inline-block;"></span>Shift</span>
-          <span style="font-size:10px;color:#6ecf9a;font-weight:700;display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--green2);display:inline-block;"></span>Weekly</span>
-          <span style="font-size:10px;color:#ff8a75;font-weight:700;display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--red2);display:inline-block;"></span>Incident</span>
-        </div>
-      </div>
-      <div class="stat-grid">
-        <div class="stat-cell" style="background:linear-gradient(160deg,rgba(26,79,156,0.25),rgba(26,79,156,0.08));border-right:1px solid rgba(74,158,255,0.15);">
-          <div class="stat-n" style="color:#4a9eff;" id="cnt-shift">0</div>
-          <div style="font-size:16px;margin-bottom:2px;">📋</div>
-          <div class="stat-l" style="color:#4a9eff80;">Shift Reports</div>
-        </div>
-        <div class="stat-cell" style="background:linear-gradient(160deg,rgba(28,110,69,0.25),rgba(28,110,69,0.08));border-right:1px solid rgba(52,212,138,0.15);">
-          <div class="stat-n" style="color:#34d48a;" id="cnt-weekly">0</div>
-          <div style="font-size:16px;margin-bottom:2px;">📆</div>
-          <div class="stat-l" style="color:#34d48a80;">Weekly</div>
-        </div>
-        <div class="stat-cell" style="background:linear-gradient(160deg,rgba(176,46,26,0.25),rgba(176,46,26,0.08));">
-          <div class="stat-n" style="color:#ff6b5a;" id="cnt-incident">0</div>
-          <div style="font-size:16px;margin-bottom:2px;">🚨</div>
-          <div class="stat-l" style="color:#ff6b5a80;">Incidents</div>
-        </div>
-      </div>
-    </div>
-
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;">
-      <div style="font-size:11.5px;color:var(--text3);font-weight:500;">Tap any date to create or view reports</div>
-        <span id="sync-icon">🔄</span> Sync
-      </button>
-      <button onclick="exportData()" style="display:flex;align-items:center;gap:5px;background:rgba(196,154,30,0.12);border:1.5px solid rgba(196,154,30,0.3);border-radius:20px;color:var(--gold);font-size:11px;font-weight:700;padding:7px 13px;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;white-space:nowrap;">📤 Export</button>
-      <label style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);border-radius:20px;color:var(--text2);font-size:11px;font-weight:700;padding:7px 13px;cursor:pointer;white-space:nowrap;">
-        📥 Import<input type="file" accept=".json" onchange="importData(event)" style="display:none;">
-      </label>
-    </div>
-
-    <!-- Calendar -->
-    <div id="cal-wrap">
-      <div id="cal-nav">
-        <button class="cal-nav-arrow" onclick="calPrev()">&#8249;</button>
-        <div class="cal-nav-center">
-          <span id="cal-month">March 2026</span>
-          <span id="cal-year-label">2026</span>
-        </div>
-        <button class="cal-nav-arrow" onclick="calNext()">&#8250;</button>
-      </div>
-      <div id="cal-daynames">
-        <div class="cal-dn weekend">Sun</div><div class="cal-dn">Mon</div><div class="cal-dn">Tue</div>
-        <div class="cal-dn">Wed</div><div class="cal-dn">Thu</div><div class="cal-dn">Fri</div><div class="cal-dn weekend">Sat</div>
-      </div>
-      <div id="cal-grid"></div>
-      <div class="cal-legend">
-        <div class="cal-legend-item"><span class="cal-legend-dot" style="background:#4a9eff;"></span><span>Shift</span></div>
-        <div class="cal-legend-item"><span class="cal-legend-dot" style="background:#34d48a;"></span><span>Weekly</span></div>
-        <div class="cal-legend-item"><span class="cal-legend-dot" style="background:#ff6b5a;"></span><span>Incident</span></div>
-        <div class="cal-legend-item"><span class="cal-legend-dot" style="background:#c09af5;"></span><span>Invoice</span></div>
-        <div class="cal-legend-item" style="margin-left:auto;"><span style="color:rgba(196,154,30,0.7);">★ = today</span></div>
-      </div>
-    </div>
-
-    <!-- Day panel -->
-    <div id="day-panel" class="hidden"></div>
-
-    <!-- New Document buttons -->
-    <div class="card" style="margin-top:4px;">
-      <div style="background:rgba(255,255,255,0.04);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;">
-        <div style="color:var(--gold);font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;">New Document</div>
-        <div style="color:var(--text3);font-size:10px;" id="new-doc-hint">Select a date first</div>
-      </div>
-      <div class="doc-grid">
-        <button class="doc-btn" onclick="newDoc('shift')"><span class="di">📋</span><span class="dl" style="color:#7eb3ff;">Shift</span></button>
-        <button class="doc-btn" onclick="newDoc('weekly')"><span class="di">📆</span><span class="dl" style="color:#6ecf9a;">Weekly</span></button>
-        <button class="doc-btn" onclick="newDoc('incident')"><span class="di">🚨</span><span class="dl" style="color:#ff8a75;">Incident</span></button>
-        <button class="doc-btn" onclick="newDoc('invoice')"><span class="di">🧾</span><span class="dl" style="color:#c09af5;">Invoice</span></button>
-      </div>
-    </div>
-
-    <!-- Links -->
-    <div style="display:flex;gap:8px;margin-top:10px;">
-      <a href="https://drive.google.com/drive/folders/1nuJWuqK0UGMCcHsS9TSviIEvVpE0D6yN" target="_blank" rel="noopener" class="btn-green" style="flex:1;margin:0;">☁️ Drive</a>
-      <a href="https://sites.google.com/achievetogethercare.com/atcdocumentcalendar/home" target="_blank" rel="noopener" class="btn-gold" style="flex:1;margin:0;">📅 Calendar</a>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════════ -->
-  <!-- FORM SCREEN -->
-  <!-- ══════════════════════════════════════════ -->
-  <div id="screen-form" class="screen">
-
-    <!-- Type pills -->
-    <div class="pills" id="type-pills">
-      <button class="pill active-shift" onclick="setType('shift')" id="pill-shift">📋 Shift</button>
-      <button class="pill" onclick="setType('weekly')" id="pill-weekly">📆 Weekly</button>
-      <button class="pill" onclick="setType('incident')" id="pill-incident">🚨 Incident</button>
-      <button class="pill" onclick="setType('invoice')" id="pill-invoice">🧾 Invoice</button>
-    </div>
-
-    <!-- SHIFT / WEEKLY / INCIDENT form -->
-    <div id="form-report">
-      <div class="card">
-        <div class="card-h" id="form-card-title">Shift Details</div>
-        <div class="card-b">
-          <div class="g3" style="margin-bottom:12px;">
-            <div><label class="lbl">Date</label><input type="date" id="f-date"></div>
-            <div><label class="lbl">Start</label><input type="time" id="f-start" value="09:00" onchange="updateHrs()"></div>
-            <div><label class="lbl">Finish</label><input type="time" id="f-end" value="15:00" onchange="updateHrs()"></div>
-          </div>
-          <div class="g2" style="margin-bottom:8px;">
-            <div><label class="lbl">Kilometres</label><input type="number" id="f-km" value="45"></div>
-            <div id="inc-type-wrap" class="hidden">
-              <label class="lbl">Incident Type</label>
-              <select id="f-inc-type">
-                <option>Behavioural / Emotional Escalation</option>
-                <option>Behavioural / Safety Incident</option>
-                <option>Significant Behavioural Incident</option>
-                <option>Housing / Accommodation Crisis</option>
-                <option>Medical Incident</option>
-              </select>
-            </div>
-          </div>
-          <div id="hrs-badge" class="info hidden"></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-h">What Happened — Write Freely</div>
-        <div class="card-b">
-          <div class="tip">💡 Example: "centrelink visit, shaun anxious about housing, beach walk, mood improved"</div>
-          <textarea id="f-notes" placeholder="Just write what happened in plain English — AI builds the full professional report..."></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- INVOICE form -->
-    <div id="form-invoice" class="hidden">
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <button id="inv-mode-weekly" class="inv-mode-btn active" onclick="setInvMode('weekly')">📆 Weekly Invoice</button>
-        <button id="inv-mode-single" class="inv-mode-btn" onclick="setInvMode('single')">📋 Single Shift</button>
-      </div>
-
-      <!-- Weekly invoice form -->
-      <div id="inv-weekly-form">
-        <div class="card">
-          <div class="card-h">Invoice Details</div>
-          <div class="card-b">
-            <div class="g2" style="margin-bottom:10px;">
-              <div><label class="lbl">Invoice No</label><input type="text" id="wi-num" value="INV-001"></div>
-              <div><label class="lbl">Invoice Date</label><input type="date" id="wi-date"></div>
-            </div>
-            <div><label class="lbl">Period</label><input type="text" id="wi-period" placeholder="e.g. 2–6 March 2026"></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-h">Shift Days</div>
-          <div class="card-b" id="week-days-list"></div>
-          <div style="padding:0 16px 14px;">
-          </div>
-        </div>
-        <div class="card" id="week-totals-card">
-          <div class="card-h">Totals Preview</div>
-          <div class="card-b" id="week-totals"></div>
-        </div>
-      </div>
-
-      <!-- Single invoice form -->
-      <div id="inv-single-form" class="hidden">
-        <div class="card">
-          <div class="card-h">Invoice Details</div>
-          <div class="card-b">
-            <div class="g2" style="margin-bottom:10px;">
-              <div><label class="lbl">Invoice No</label><input type="text" id="si-num" value="INV-001"></div>
-              <div><label class="lbl">Invoice Date</label><input type="date" id="si-date"></div>
-            </div>
-            <div class="g3" style="margin-bottom:10px;">
-              <div><label class="lbl">Service Date</label><input type="date" id="si-sdate"></div>
-              <div><label class="lbl">Start</label><input type="time" id="si-start" value="09:00"></div>
-              <div><label class="lbl">Finish</label><input type="time" id="si-end" value="15:00"></div>
-            </div>
-            <div class="g2">
-              <div><label class="lbl">Kilometres</label><input type="number" id="si-km" value="45"></div>
-              <div><label class="lbl">Line Item</label>
-                <select id="si-item">
-                  <option value="09">09 — Community ($105.43/hr)</option>
-                  <option value="08">08 — Accommodation ($99.72/hr)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Error -->
-    <div id="form-err" class="err hidden"></div>
-
-    <!-- Type badge -->
-    <div id="type-badge" style="background:rgba(26,79,156,0.15);border-color:rgba(26,79,156,0.4);color:#7eb3ff;">📋 Daily Shift Report</div>
-
-    <!-- Generate button -->
-    <button class="btn-gen" id="gen-btn" style="background:linear-gradient(135deg,#1a4f9c,#2563c0);" onclick="generate()">📋 Generate Daily Shift Report + PDF</button>
-
-    <!-- Result area -->
-    <div id="result-area" class="hidden">
-      <div class="card">
-        <div class="result-success-hdr">
-          <div class="result-icon">✅</div>
-          <div>
-            <div style="font-family:'Fraunces',serif;font-size:16px;color:var(--text);font-weight:500;">Document Ready</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px;" id="result-filename"></div>
-          </div>
-        </div>
-
-        <!-- AI Report preview -->
-        <div id="report-preview-wrap" style="padding:14px 14px 0;">
-          <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Report Preview</div>
-          <div class="rpt-preview">
-            <div class="rpt-mini-hdr" style="display:flex;justify-content:space-between;align-items:center;">
-              <div><div style="color:var(--gold);font-family:'Fraunces',serif;font-size:13px;font-weight:500;">Achieve Together Care</div><div style="color:rgba(255,255,255,.35);font-size:9px;margin-top:1px;letter-spacing:0.5px;">NDIS DISABILITY SERVICES</div></div>
-              <div style="text-align:right;"><div style="color:var(--text2);font-size:9px;">Shaun Case</div><div style="color:var(--gold);font-size:8px;margin-top:1px;">NDIS 432005774</div></div>
-            </div>
-            <div id="preview-details" style="background:#f5f7fc;border-bottom:1px solid #dde3f0;padding:9px 14px;display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px;color:#333;"></div>
-            <div id="preview-sections"></div>
-            <div style="border-top:1px solid #dde3f0;padding:7px 14px;display:flex;justify-content:space-between;background:#fff;">
-              <span style="font-size:8px;color:#aaa;letter-spacing:0.5px;">ACHIEVE TOGETHER CARE · CONFIDENTIAL</span>
-              <span style="font-size:8px;color:#aaa;" id="preview-date"></span>
-            </div>
-          </div>
-        </div>
-
-        <div style="padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px;">
-          <button class="btn-blue" onclick="viewFullReport()" style="font-size:14px;padding:14px;">🔍 View Full Report</button>
-          <button class="btn-dl" id="dl-btn" onclick="reDownload()" style="font-size:14px;padding:14px;">⬇️ Download PDF Again</button>
-          <button class="btn-dl" onclick="if(state.result)shareFile(state.result.dataUri,state.result.fileName)" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,#1a6fa8,#2589cc);color:#fff;font-family:'Fraunces',serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:0;">📤 Share / Save to Drive</button>
-          <button class="btn-outline" onclick="viewOnCal()" id="view-cal-btn" style="font-size:14px;padding:14px;">📅 View on Calendar</button>
-          <button class="btn-outline" onclick="resetForm()" style="font-size:14px;padding:14px;">✍️ New Report</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- FULL REPORT MODAL -->
-  <div id="report-modal" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;background:var(--navy);" class="hidden">
-    <div style="background:rgba(10,22,40,0.98);border-bottom:1px solid rgba(196,154,30,0.25);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-      <div>
-        <div style="color:var(--gold);font-weight:700;font-size:14px;font-family:'Fraunces',serif;">ATC — View Report</div>
-        <div style="color:var(--text3);font-size:10px;margin-top:1px;" id="modal-filename"></div>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="closeModal()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text2);padding:9px 13px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">✕</button>
-      </div>
-    </div>
-    <div id="report-modal-body" style="flex:1;overflow-y:auto;background:#fff;"></div>
-    <div style="background:rgba(10,22,40,0.98);border-top:1px solid rgba(196,154,30,0.25);padding:10px 16px;display:flex;gap:8px;flex-shrink:0;">
-      <button onclick="window.open('https://drive.google.com/drive/folders/1nuJWuqK0UGMCcHsS9TSviIEvVpE0D6yN','_blank')" class="btn-green" style="flex:1;margin:0;">☁️ Drive</button>
-      <button onclick="window.open('https://sites.google.com/achievetogethercare.com/atcdocumentcalendar/home','_blank')" class="btn-gold" style="flex:1;margin:0;">📅 ATC Cal</button>
-    </div>
-
+<!-- LOADING -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <p id="loadingMsg">Generating report...</p>
 </div>
 
-  <!-- POST-GENERATE ACTION SHEET -->
-  <div id="action-sheet-overlay" class="hidden" style="position:fixed;inset:0;z-index:10002;background:rgba(5,12,25,0.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeActionSheet()">
-    <div style="background:linear-gradient(160deg,#13203d,#0a1628);border:1px solid rgba(196,154,30,0.3);border-bottom:none;border-radius:24px 24px 0 0;padding:12px 0 0;width:100%;max-width:520px;box-shadow:0 -12px 48px rgba(0,0,0,0.6);animation:sheetUp .32s cubic-bezier(.22,.68,0,1.15) both;">
-      <div style="width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,0.18);margin:0 auto 18px;"></div>
-      <div style="text-align:center;margin-bottom:6px;">
-        <div style="font-size:36px;margin-bottom:8px;">✅</div>
-        <div style="font-family:'Fraunces',serif;font-size:21px;color:var(--text);font-weight:500;">Report Ready!</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:5px;padding:0 24px;line-height:1.55;" id="as-filename">PDF saved to your phone</div>
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- REPORT MODAL -->
+<div class="overlay" id="reportModal">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3>\ud83d\udcc4 Shift Report</h3>
+      <button class="modal-close" onclick="closeModal('reportModal')">\u2715</button>
+    </div>
+    <div class="modal-body">
+      <div id="reportBox"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-cal" onclick="saveToCalendar()">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Save to Calendar
+      </button>
+      <button class="btn btn-drive" onclick="saveToDrive()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 19h20L12 2z"/><path d="M12 2l10 17H2"/></svg>
+        Save to Drive
+      </button>
+      <button class="btn btn-both" onclick="saveBoth()">
+        \u26a1 Save to Both
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CALENDAR CONFIRM MODAL -->
+<div class="overlay" id="calModal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-hd">
+      <h3>\ud83d\udcc5 Add to Calendar</h3>
+      <button class="modal-close" onclick="closeModal('calModal')">\u2715</button>
+    </div>
+    <div class="modal-body">
+      <div class="cal-preview">
+        <h4>
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Event Details
+        </h4>
+        <div class="cal-row"><span class="k">Title</span><span class="v" id="ce-title">\u2014</span></div>
+        <div class="cal-row"><span class="k">Date</span><span class="v" id="ce-date">\u2014</span></div>
+        <div class="cal-row"><span class="k">Time</span><span class="v" id="ce-time">\u2014</span></div>
+        <div class="cal-row"><span class="k">Duration</span><span class="v" id="ce-dur">\u2014</span></div>
+        <div class="cal-row"><span class="k">Location</span><span class="v" id="ce-loc">\u2014</span></div>
+        <div class="cal-row"><span class="k">Participant</span><span class="v" id="ce-part">\u2014</span></div>
       </div>
-      <div style="padding:16px 16px 4px;display:flex;flex-direction:column;gap:10px;">
-        <button onclick="if(state.result)shareFile(state.result.dataUri,state.result.fileName)" style="display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:18px;border:none;border-radius:16px;background:linear-gradient(135deg,#1c6e45,#22a05a);color:#fff;font-family:'Fraunces',serif;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(28,110,69,0.45);">📤 Share PDF — Drive / Email / WhatsApp</button>
-        <a href="https://drive.google.com/drive/folders/1nuJWuqK0UGMCcHsS9TSviIEvVpE0D6yN" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px;border-radius:16px;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);font-family:'Fraunces',serif;font-size:13px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,0.1);">☁️ Open Drive Folder</a>
-        <a id="gcal-link" href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:12px;padding:17px 16px;border-radius:14px;background:linear-gradient(135deg,#1a4f9c,#2563c0);color:#fff;font-family:'Fraunces',serif;font-size:16px;font-weight:700;text-decoration:none;box-shadow:0 4px 20px rgba(26,79,156,0.45);">📅 Add to Google Calendar</a>
-        <a href="https://sites.google.com/achievetogethercare.com/atcdocumentcalendar/home" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;justify-content:center;gap:12px;padding:17px 16px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Fraunces',serif;font-size:16px;font-weight:700;text-decoration:none;box-shadow:0 4px 20px rgba(196,154,30,0.4);">📊 Open ATC Document Calendar</a>
+      <p style="font-size:0.82rem;color:var(--muted2);line-height:1.6;">
+        This will open Google Calendar with the shift pre-filled on the correct date and time. The report notes will be included in the event description.
+      </p>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-preview" onclick="closeModal('calModal')" style="flex:0 0 auto;padding:12px 18px;">Cancel</button>
+      <button class="btn btn-cal" onclick="confirmCalendar()" style="flex:1;">
+        Open Google Calendar \u2192
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<header>
+  <div class="logo">ATC</div>
+  <div class="header-text">
+    <h1>Shift Report Generator</h1>
+    <p>Achieve Together Care \u00b7 ABN 68 493 366 184</p>
+  </div>
+  <div class="header-right">
+    <div class="sync-badge" id="syncBadge" onclick="toggleApiKey()">
+      <div class="dot" id="syncDot"></div>
+      <span id="syncLabel">API Key</span>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-val" id="sHours">0.0h</div><div class="stat-lbl">Duration</div></div>
+    <div class="stat"><div class="stat-val" id="sDate">\u2014</div><div class="stat-lbl">Shift Date</div></div>
+    <div class="stat"><div class="stat-val" id="sKm">\u2014</div><div class="stat-lbl">Travel</div></div>
+    <div class="stat"><div class="stat-val" id="sType">\u2014</div><div class="stat-lbl">Support Type</div></div>
+  </div>
+
+  <!-- API KEY (collapsible) -->
+  <div class="card" id="apiCard" style="display:none;">
+    <div class="card-title">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      Anthropic API Key
+    </div>
+    <div class="g2">
+      <div class="full">
+        <label>API Key (saved locally, never sent anywhere else)</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-..." oninput="checkApiKey()">
       </div>
-      <div style="height:max(env(safe-area-inset-bottom,0px),20px);"></div>
     </div>
   </div>
 
-  <!-- FULL REPORT MODAL -->
-  <div id="report-modal" style="position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;background:var(--navy);" class="hidden">
-    <div style="background:rgba(10,22,40,0.98);border-bottom:1px solid rgba(196,154,30,0.25);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-      <div>
-        <div style="color:var(--gold);font-weight:700;font-size:14px;font-family:'Fraunces',serif;">ATC — View Report</div>
-        <div style="color:var(--text3);font-size:10px;margin-top:1px;" id="modal-filename"></div>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="closeModal()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--text2);padding:9px 13px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;">✕</button>
-      </div>
+  <!-- SHIFT DETAILS -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Shift Details
     </div>
-    <div id="report-modal-body" style="flex:1;overflow-y:auto;background:#fff;"></div>
-    <div style="background:rgba(10,22,40,0.98);border-top:1px solid rgba(196,154,30,0.25);padding:10px 16px;display:flex;gap:8px;flex-shrink:0;">
-      <a href="https://drive.google.com/drive/folders/1nuJWuqK0UGMCcHsS9TSviIEvVpE0D6yN" target="_blank" rel="noopener noreferrer" class="btn-green" style="flex:1;margin:0;text-decoration:none;display:flex;align-items:center;justify-content:center;">☁️ Drive</a>
-      <a href="https://sites.google.com/achievetogethercare.com/atcdocumentcalendar/home" target="_blank" rel="noopener noreferrer" class="btn-gold" style="flex:1;margin:0;text-decoration:none;display:flex;align-items:center;justify-content:center;">📅 ATC Cal</a>
+    <div class="g3">
+      <div>
+        <label>Shift Date</label>
+        <input type="date" id="shiftDate" oninput="updateStats()">
+      </div>
+      <div>
+        <label>Start Time</label>
+        <input type="time" id="startTime" value="09:00" oninput="updateStats()">
+      </div>
+      <div>
+        <label>End Time</label>
+        <input type="time" id="endTime" value="15:00" oninput="updateStats()">
+      </div>
+      <div>
+        <label>Support Worker</label>
+        <input type="text" id="workerName" value="Daniel Hayward">
+      </div>
+      <div>
+        <label>Support Type</label>
+        <select id="supportType" onchange="updateStats()">
+          <option>Daily Activities</option>
+          <option>Community Participation</option>
+          <option>Personal Care</option>
+          <option>Transport</option>
+          <option>Domestic Assistance</option>
+          <option>Social Support</option>
+          <option>Therapy Support</option>
+        </select>
+      </div>
+      <div>
+        <label>Location</label>
+        <input type="text" id="location" placeholder="e.g. Participant's home, Community">
+      </div>
     </div>
   </div>
+
+  <!-- PARTICIPANT -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Participant
+    </div>
+    <div class="g3">
+      <div>
+        <label>Name</label>
+        <input type="text" id="participantName" value="Shaun Case">
+      </div>
+      <div>
+        <label>NDIS Number</label>
+        <input type="text" id="ndisNum" value="432005774">
+      </div>
+      <div>
+        <label>Support Coordinator</label>
+        <input type="text" id="coordinator" value="Rachel Hanson">
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVITIES -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Activities & Support
+    </div>
+    <div class="g2">
+      <div class="full">
+        <label>Activities &amp; Support Provided (bullet points or notes \u2014 AI will write the report)</label>
+        <textarea id="activities" rows="5" placeholder="e.g.&#10;- Assisted with morning routine&#10;- Attended medical appointment at Royal Melbourne&#10;- Prepared lunch together&#10;- Walked to the park, 20 mins&#10;- Watched footy, chatted about weekend"></textarea>
+      </div>
+      <div class="full">
+        <label>Participant Mood &amp; Engagement</label>
+        <div class="mood-row">
+          <button class="mood-chip" data-mood="positive" onclick="selectMood(this)">\ud83d\ude0a Positive</button>
+          <button class="mood-chip" data-mood="neutral" onclick="selectMood(this)">\ud83d\ude10 Neutral</button>
+          <button class="mood-chip" data-mood="anxious" onclick="selectMood(this)">\ud83d\ude1f Anxious</button>
+          <button class="mood-chip" data-mood="agitated" onclick="selectMood(this)">\ud83d\ude24 Agitated</button>
+          <button class="mood-chip" data-mood="withdrawn" onclick="selectMood(this)">\ud83d\ude36 Withdrawn</button>
+          <button class="mood-chip" data-mood="distressed" onclick="selectMood(this)">\ud83d\ude30 Distressed</button>
+        </div>
+      </div>
+      <div>
+        <label>NDIS Goals Addressed</label>
+        <textarea id="goals" rows="3" placeholder="e.g. community access, social skills, independence in daily living..."></textarea>
+      </div>
+      <div>
+        <label>Additional Notes / Observations</label>
+        <textarea id="notes" rows="3" placeholder="Any changes in behaviour, health concerns, family contact, etc..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSPORT -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      Transport
+    </div>
+    <div class="g3">
+      <div>
+        <label>Transport Provided?</label>
+        <select id="transportUsed" onchange="toggleTransport()">
+          <option value="no">No transport</option>
+          <option value="yes">Yes \u2014 transport provided</option>
+        </select>
+      </div>
+      <div id="kmWrap" style="display:none;">
+        <label>Kilometres</label>
+        <input type="number" id="kilometres" placeholder="0" min="0" oninput="updateStats()">
+      </div>
+      <div id="vehicleWrap" style="display:none;">
+        <label>Vehicle</label>
+        <select id="vehicle">
+          <option>Worker's own vehicle</option>
+          <option>Participant's vehicle</option>
+          <option>Agency vehicle</option>
+          <option>Public transport</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- INCIDENT -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Incident / Behaviour
+    </div>
+    <div class="g2">
+      <div>
+        <label>Incident Occurred?</label>
+        <select id="incidentOccurred" onchange="toggleIncident()">
+          <option value="no">No incident</option>
+          <option value="yes">Yes \u2014 incident to report</option>
+        </select>
+      </div>
+      <div id="incTypeWrap" style="display:none;">
+        <label>Incident Type</label>
+        <select id="incidentType">
+          <option>Behavioural / Emotional Escalation</option>
+          <option>Behavioural / Safety Incident</option>
+          <option>Significant Behavioural Incident</option>
+          <option>Physical Altercation</option>
+          <option>Property Damage</option>
+          <option>Self-Harm Risk</option>
+          <option>Medical Emergency</option>
+          <option>Near Miss</option>
+        </select>
+      </div>
+      <div id="incDescWrap" class="full" style="display:none;">
+        <label>Incident Description</label>
+        <textarea id="incidentDesc" rows="3" placeholder="Describe what occurred, how it was managed, and outcome..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <div class="card-title">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Generate &amp; Save
+    </div>
+    <button class="btn btn-gen" onclick="generateReport()">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Generate Shift Report
+    </button>
+    <div class="btn-row">
+      <button class="btn btn-preview" onclick="previewOnly()" id="btnPreview" disabled>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Preview Report
+      </button>
+      <button class="btn btn-cal" onclick="saveToCalendar()" id="btnCal" disabled>
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Save to Calendar
+      </button>
+      <button class="btn btn-drive" onclick="saveToDrive()" id="btnDrive" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 17H2a2 2 0 01-1.7-3L9.2 4a2 2 0 013.4 0l8.9 10A2 2 0 0122 17z"/></svg>
+        Save to Drive
+      </button>
+    </div>
+    <button class="btn btn-both" onclick="saveBoth()" id="btnBoth" disabled>
+      \u26a1 Save to Calendar + Drive
+    </button>
+  </div>
+
+</div><!-- /container -->
 
 <script>
+// \u2500\u2500 STATE \u2500\u2500
+let generatedReport = null;
+let selectedMood = '';
 
-// ═══════════════════════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════════════════════
-const NAVY="#1B2A4A",NAVYD="#0F1C35",GOLD="#C49A1E",BLUE="#1A4F9C",GREEN="#1C6E45",RED="#B02E1A",PURPLE="#5B2D8E";
-const cn=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
-const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
-const DRIVE_URL="https://drive.google.com/drive/folders/1nuJWuqK0UGMCcHsS9TSviIEvVpE0D6yN";
-const CAL_URL="https://sites.google.com/achievetogethercare.com/atcdocumentcalendar/home";
-const KM_RATE=0.99;
-const ITEMS={'09':{code:'09_011_0125_6_3',desc:'Increased Social & Community Participation — CB Supports',rate:105.43},'08':{code:'08_001_0105_2_3',desc:'Assistance with Accommodation/Tenancy Obligations — CB Supports',rate:99.72}};
-
-// ═══════════════════════════════════════════════════════════
-// STORAGE
-// ═══════════════════════════════════════════════════════════
-let STORE={};
-try{const s=localStorage.getItem('atc_reports');if(s)STORE=JSON.parse(s);}catch(e){}
-function saveRep(date,entry){if(!STORE[date])STORE[date]=[];STORE[date].push(entry);try{localStorage.setItem('atc_reports',JSON.stringify(STORE));}catch(e){}}
-function getReps(date){return STORE[date]||[];}
-function hasReps(date){return !!(STORE[date]&&STORE[date].length);}
-function countType(t){return Object.values(STORE).flat().filter(r=>r.type===t).length;}
-
-// ═══════════════════════════════════════════════════════════
-// API KEY — triple-stored for maximum persistence
-// ═══════════════════════════════════════════════════════════
-function loadApiKey(){
-  let k='';
-  try{k=localStorage.getItem('atc_api_key')||'';}catch(e){}
-  if(!k){try{k=sessionStorage.getItem('atc_api_key')||'';}catch(e){}}
-  if(!k){try{const m=document.cookie.match(/atc_api_key=([^;]+)/);if(m)k=decodeURIComponent(m[1]);}catch(e){}}
-  return k;
+// \u2500\u2500 API KEY \u2500\u2500
+function getApiKey(){return localStorage.getItem('atc_api_key')||'';}
+function checkApiKey(){
+  const k=document.getElementById('apiKeyInput').value.trim();
+  if(k) localStorage.setItem('atc_api_key',k);
+  updateKeyUI();
 }
-function persistApiKey(k){
-  try{localStorage.setItem('atc_api_key',k);}catch(e){}
-  try{sessionStorage.setItem('atc_api_key',k);}catch(e){}
-  try{const exp=new Date();exp.setFullYear(exp.getFullYear()+5);document.cookie='atc_api_key='+encodeURIComponent(k)+';expires='+exp.toUTCString()+';path=/;SameSite=Strict';}catch(e){}
+function updateKeyUI(){
+  const k=getApiKey();
+  document.getElementById('syncDot').className='dot'+(k?' live':'');
+  document.getElementById('syncLabel').textContent=k?'AI Ready':'API Key';
 }
-let apiKey=loadApiKey();
-function toggleApiPanel(){
-  const p=document.getElementById('api-panel');
-  p.classList.toggle('hidden');
-  const inp=document.getElementById('api-key-input');
-  const statusEl=document.getElementById('api-status');
-  if(!p.classList.contains('hidden')){
-    if(apiKey){
-      inp.value='sk-ant-...'+apiKey.slice(-4);
-      statusEl.style.color='#34d48a';
-      statusEl.textContent='✅ Key saved: sk-ant-...'+apiKey.slice(-4)+' — tap Save to update';
-    } else {
-      inp.value='';
-      statusEl.style.color='';
-      statusEl.textContent='Paste your Anthropic API key above';
-    }
+function toggleApiKey(){
+  const card=document.getElementById('apiCard');
+  card.style.display=card.style.display==='none'?'block':'none';
+  if(card.style.display==='block'){
+    const inp=document.getElementById('apiKeyInput');
+    inp.value=getApiKey();
+    inp.focus();
   }
 }
-function saveApiKey(){
-  const inp=document.getElementById('api-key-input');
-  const statusEl=document.getElementById('api-status');
-  const v=inp.value.trim();
-  if(!v||v==='sk-ant-...saved'){
-    statusEl.textContent='✅ Key already saved — generate a report to use it';
-    setTimeout(()=>document.getElementById('api-panel').classList.add('hidden'),2000);
-    return;
-  }
-  if(!v.startsWith('sk-ant-')){
-    statusEl.style.color='#ff6b5a';
-    statusEl.textContent='❌ Invalid key — must start with sk-ant-';
-    return;
-  }
-  apiKey=v;
-  // Save to all 3 storage methods
-  let saved=false;
-  try{localStorage.setItem('atc_api_key',v);saved=true;}catch(e){}
-  try{sessionStorage.setItem('atc_api_key',v);}catch(e){}
-  try{const exp=new Date();exp.setFullYear(exp.getFullYear()+5);document.cookie='atc_api_key='+encodeURIComponent(v)+';expires='+exp.toUTCString()+';path=/;SameSite=Strict';}catch(e){}
-  // Verify it actually saved
-  let verified=false;
-  try{verified=localStorage.getItem('atc_api_key')===v;}catch(e){}
-  const masked='sk-ant-...'+v.slice(-4);
-  if(verified){
-    statusEl.style.color='#34d48a';
-    statusEl.textContent='✅ Saved: '+masked+' — persists when you close the app';
-  } else {
-    statusEl.style.color='#f5d875';
-    statusEl.textContent='⚠️ Saved for this session only — open via GitHub Pages URL for permanent save';
-  }
-  inp.value=masked;
-  setTimeout(()=>document.getElementById('api-panel').classList.add('hidden'),2500);
+updateKeyUI();
+
+// \u2500\u2500 MOOD \u2500\u2500
+function selectMood(el){
+  document.querySelectorAll('.mood-chip').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedMood=el.dataset.mood;
 }
 
-// ═══════════════════════════════════════════════════════════
-// ANDROID-SAFE OPENERS
-// ═══════════════════════════════════════════════════════════
-function openDrive(){
-  try{
-    const a=document.createElement('a');
-    a.href=DRIVE_URL;
-    a.target='_blank';
-    a.rel='noopener noreferrer';
-    a.style.cssText='position:fixed;opacity:0;top:0;left:0;';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{try{document.body.removeChild(a);}catch(e){}},300);
-  }catch(e){window.location.href=DRIVE_URL;}
-}
-function openGCal(url){
-  try{
-    const a=document.createElement('a');
-    a.href=url||'https://calendar.google.com';
-    a.target='_blank';a.rel='noopener noreferrer';
-    a.style.cssText='position:fixed;opacity:0;top:0;left:0;';
-    document.body.appendChild(a);a.click();
-    setTimeout(()=>{try{document.body.removeChild(a);}catch(e){}},300);
-  }catch(e){window.location.href=url;}
-}
-function openATCCal(){
-  try{
-    const a=document.createElement('a');
-    a.href=CAL_URL;
-    a.target='_blank';
-    a.rel='noopener noreferrer';
-    a.style.cssText='position:fixed;opacity:0;top:0;left:0;';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{try{document.body.removeChild(a);}catch(e){}},300);
-  }catch(e){window.location.href=CAL_URL;}
-}
-
-// ═══════════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════════
-function calcHrs(s,e){try{const a=new Date('2000-01-01T'+s),b=new Date('2000-01-01T'+e);const h=(b-a)/3600000;return h>0?+h.toFixed(2):0;}catch{return 0;}}
-function fmtDateLong(d){try{return new Date(d+'T12:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch{return d;}}
-function todayStr(){const t=new Date();return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');}
-function getWeekRange(dateStr){const d=new Date(dateStr+'T12:00:00');const dow=d.getDay();const mon=new Date(d);mon.setDate(d.getDate()-(dow===0?6:dow-1));const sun=new Date(mon);sun.setDate(mon.getDate()+6);const fmt=n=>n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');return{mon:fmt(mon),sun:fmt(sun)};}
-function inWeek(dateStr,anchorStr){if(!anchorStr)return false;const{mon,sun}=getWeekRange(anchorStr);return dateStr>=mon&&dateStr<=sun;}
-function androidDownload(dataUri,fileName){
-  try{
-    const a=document.createElement('a');
-    a.href=dataUri;a.download=fileName||'document.pdf';
-    a.style.cssText='position:fixed;opacity:0;top:0;left:0';
-    document.body.appendChild(a);a.click();
-    setTimeout(()=>{try{document.body.removeChild(a);}catch(e){}},500);
-  }catch(e){window.open(dataUri,'_blank');}
-}
-
-async function shareFile(dataUri, fileName){
-  try{
-    // Convert dataURI to blob
-    const res = await fetch(dataUri);
-    const blob = await res.blob();
-    const file = new File([blob], fileName||'report.pdf', {type:'application/pdf'});
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({
-        title: fileName||'ATC Report',
-        text: 'Achieve Together Care — Shaun Case report',
-        files: [file]
-      });
-    } else {
-      // Fallback: just download
-      androidDownload(dataUri, fileName);
-      alert('Share not supported on this browser — file downloaded instead.');
-    }
-  } catch(e){
-    if(e.name!=='AbortError') androidDownload(dataUri, fileName);
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// PDF FUNCTIONS
-// ═══════════════════════════════════════════════════════════
-async function loadPDF(){
-  if(window.jspdf)return window.jspdf.jsPDF;
-  await new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=ok;s.onerror=no;document.head.appendChild(s);});
-  return window.jspdf.jsPDF;
-}
-
-function addChrome(doc,title,sub,W,H,M,CW,pg){
-  const[nr,ng,nb]=cn(NAVY),[gr,gg,gb]=cn(GOLD),d=[85,85,85];
-  doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(nr,ng,nb);doc.text('Achieve Together Care',M,14.5);
-  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...d);
-  doc.text('NDIS Disability Services  ·  Empowering Lives, Achieving Together',M,20.5);
-  doc.text('(02) 49 718',W-M,14.5,{align:'right'});doc.text('info@achievetogethercare.com.au',W-M,19,{align:'right'});doc.text('admin@achievetogethercare.com.au',W-M,23.5,{align:'right'});
-  doc.setDrawColor(gr,gg,gb);doc.setLineWidth(0.7);doc.line(M,26.5,W-M,26.5);
-  doc.setFillColor(nr,ng,nb);doc.rect(M,28,CW,9.5,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(255,255,255);doc.text(title.toUpperCase(),W/2,34.5,{align:'center'});
-  doc.setDrawColor(gr,gg,gb);doc.setLineWidth(0.4);doc.line(M,H-15,W-M,H-15);
-  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...d);
-  doc.text('Achieve Together Care  ·  '+sub+'  ·  CONFIDENTIAL',M,H-11);doc.text('Page '+pg,W-M,H-11,{align:'right'});
-}
-
-async function makeWeeklyInvoice({invNum,invDate,period,days,lineItem,bankName,bsb,accNum,abn}){
-  const jsPDF=await loadPDF();
-  const doc=new jsPDF({unit:'mm',format:'a4'});
-  const W=210,H=297,M=14,CW=W-M*2;
-  const[nr,ng,nb]=cn(NAVY),[lr,lg,lb]=[220,225,240],[or,og,ob]=[245,247,252],[dr,dg,db]=[100,100,100];
-  const[br,bg,bb]=cn(BLUE);
-  const RATES={
-    weekday:{desc:'Access Community Social & Rec Activ — Weekday',code:'04_104_0125_6_1',rate:70.23},
-    saturday:{desc:'Access Community Social & Rec Activ — Saturday',code:'04_105_0125_6_1',rate:98.83},
-    sunday:{desc:'Access Community Social & Rec Activ — Sunday',code:'04_106_0125_6_1',rate:127.43},
-    pubhol:{desc:'Access Community Social & Rec Activ — Public Holiday',code:'04_102_0125_6_1',rate:156.03},
-  };
-  const TRANSPORT={desc:'Activity Based Transport — Non-Labour Costs',code:'04_590_0125_6_1',rate:0.97};
-  const PROVTRAVEL={desc:'Provider Travel — Non-Labour Costs',code:'04_799_0125_6_1',rate:70.23,qty:0.25};
-  const getDayRate=(dateStr)=>{const dow=new Date(dateStr+'T12:00:00').getDay();if(dow===0)return RATES.sunday;if(dow===6)return RATES.saturday;return RATES.weekday;};
-  let pg=0;
-  const np=()=>{
-    if(pg>0)doc.addPage();pg++;
-    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(nr,ng,nb);doc.text('ACHIEVE TOGETHER CARE',M,18);
-    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(dr,dg,db);doc.text('Tax Invoice',W-M,18,{align:'right'});
-    doc.setDrawColor(nr,ng,nb);doc.setLineWidth(0.6);doc.line(M,21,W-M,21);
-  };
-  np();
-  let y=27;
-  const leftX=M,rightX=W/2+4,colW=(W/2)-M-4;
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(br,bg,bb);doc.text('INVOICE DETAILS',leftX,y);y+=3;
-  const iRows=[['Invoice No',invNum],['Date',invDate],['Period',period],['Client','Shaun Case NDIS: 432005774'],['Worker','Daniel Hayward']];
-  iRows.forEach(([l,v],i)=>{const ry=y+(i*7);doc.setFillColor(...(i%2===0?[or,og,ob]:[255,255,255]));doc.rect(leftX,ry,colW,7,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.2);doc.rect(leftX,ry,colW,7,'S');doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(nr,ng,nb);doc.text(l,leftX+2,ry+4.8);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);doc.text(String(v),leftX+28,ry+4.8,{maxWidth:colW-30});});
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(br,bg,bb);doc.text('NDIS PRICE LIMITS USED — Category 04 (0125)',rightX,y);y+=3;
-  const pRows=[['Support Type','Code','Rate'],['Weekday Daytime','04_104_0125_6_1','$70.23'],['Saturday','04_105_0125_6_1','$98.83'],['Sunday','04_106_0125_6_1','$127.43'],['Public Holiday','04_102_0125_6_1','$156.03'],['Activity Based Transport','04_590_0125_6_1','$0.97/km'],['Provider Travel (non-labour)','04_799_0125_6_1','$1.00/km']];
-  const pc=[42,38,14];
-  pRows.forEach(([a,b2,c2],i)=>{const ry=y+(i*7);const isHead=i===0;doc.setFillColor(...(isHead?[nr,ng,nb]:i%2===0?[or,og,ob]:[255,255,255]));doc.rect(rightX,ry,colW,7,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.2);doc.rect(rightX,ry,colW,7,'S');doc.setFont('helvetica',isHead?'bold':'normal');doc.setFontSize(7);doc.setTextColor(...(isHead?[255,255,255]:[0,0,0]));doc.text(a,rightX+2,ry+4.8,{maxWidth:pc[0]-2});doc.text(b2,rightX+pc[0]+1,ry+4.8,{maxWidth:pc[1]-2});doc.text(c2,rightX+pc[0]+pc[1]+1,ry+4.8,{maxWidth:pc[2]-1});});
-  y+=iRows.length*7+6;
-  doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(br,bg,bb);doc.text('SERVICE DETAILS',M,y);y+=3;
-  const cw2={date:30,desc:72,code:30,qty:14,rate:16,total:CW-30-72-30-14-16};
-  doc.setFillColor(nr,ng,nb);doc.rect(M,y,CW,7,'F');doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(255,255,255);
-  let cx=M+2;[['Date',cw2.date],['Description',cw2.desc],['NDIS Code',cw2.code],['Qty',cw2.qty],['Rate',cw2.rate],['Total',cw2.total]].forEach(([t,w])=>{doc.text(t,cx,y+5);cx+=w;});y+=7;
-  const tr=(dateLabel,desc,code,qty,rate,total,shade)=>{
-    if(y+8>H-30){np();y=27;doc.setFillColor(nr,ng,nb);doc.rect(M,y,CW,7,'F');doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(255,255,255);let cx2=M+2;[['Date',cw2.date],['Description',cw2.desc],['NDIS Code',cw2.code],['Qty',cw2.qty],['Rate',cw2.rate],['Total',cw2.total]].forEach(([t,w])=>{doc.text(t,cx2,y+5);cx2+=w;});y+=7;}
-    doc.setFillColor(...(shade?[248,249,253]:[255,255,255]));doc.rect(M,y,CW,7.5,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.15);doc.rect(M,y,CW,7.5,'S');doc.setFont('helvetica','normal');doc.setFontSize(7.2);doc.setTextColor(0,0,0);let x=M+2;[[dateLabel,cw2.date],[desc,cw2.desc],[code,cw2.code],[qty,cw2.qty],[rate,cw2.rate],[total,cw2.total]].forEach(([v,w])=>{doc.text(String(v||''),x,y+5,{maxWidth:w-2});x+=w;});y+=7.5;
-  };
-  let totalSupHrs=0,totalSupAmt=0,totalKm=0,totalKmAmt=0,totalTravelAmt=0,shade=false;
-  const PTRAVEL_RATE=1.00,PTRAVEL_QTY=0.25;
-  days.filter(d=>d.active&&calcHrs(d.start,d.end)>0).forEach(d=>{
-    const h=parseFloat(calcHrs(d.start,d.end));const k=parseFloat(d.km)||0;const dr2=getDayRate(d.date);
-    const suppAmt=+(h*dr2.rate).toFixed(2);const kmAmt=+(k*TRANSPORT.rate).toFixed(2);const travelAmt=+(PTRAVEL_QTY*PTRAVEL_RATE).toFixed(2);
-    totalSupHrs+=h;totalSupAmt+=suppAmt;totalKm+=k;totalKmAmt+=kmAmt;totalTravelAmt+=travelAmt;
-    const dlabel=new Date(d.date+'T12:00:00').toLocaleDateString('en-AU',{day:'2-digit',month:'2-digit',year:'numeric'})+'('+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(d.date+'T12:00:00').getDay()]+')';
-    tr(dlabel,dr2.desc,dr2.code,h.toFixed(1)+' h','$'+dr2.rate.toFixed(2),'$'+suppAmt.toFixed(2),shade);
-    if(k>0)tr('',TRANSPORT.desc,TRANSPORT.code,k+' km','$'+TRANSPORT.rate.toFixed(2),'$'+kmAmt.toFixed(2),shade);
-    tr('',PROVTRAVEL.desc,PROVTRAVEL.code,PTRAVEL_QTY+' h','$'+PTRAVEL_RATE.toFixed(2),'$'+travelAmt.toFixed(2),shade);
-    shade=!shade;
-  });
-  y+=4;
-  const grandTotal=+(totalSupAmt+totalKmAmt+totalTravelAmt).toFixed(2);
-  const totRows=[['Total Support Hours ('+totalSupHrs.toFixed(1)+' h)','$'+totalSupAmt.toFixed(2),false],['Total Transport ('+totalKm+' km)','$'+totalKmAmt.toFixed(2),false],['Total Provider Travel ('+((days.filter(d=>d.active&&calcHrs(d.start,d.end)>0).length)*PTRAVEL_QTY).toFixed(1)+' h)','$'+totalTravelAmt.toFixed(2),false],['TOTAL PAYABLE','$'+grandTotal.toFixed(2),true]];
-  totRows.forEach(([l,v,bold])=>{if(y+8>H-30){np();y=27;}doc.setFillColor(...(bold?[nr,ng,nb]:[255,255,255]));doc.rect(M,y,CW,8,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.3);doc.rect(M,y,CW,8,'S');doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(bold?9:8);doc.setTextColor(...(bold?[255,255,255]:[0,0,0]));doc.text(l,M+3,y+5.5);doc.text(v,W-M-3,y+5.5,{align:'right'});y+=8;});
-  y+=8;
-  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(br,bg,bb);doc.text('PAYMENT DETAILS',W/2,y,{align:'center'});y+=4;
-  const payRows=[['Account Name:','Achieve Together Care'],['BSB:','067-873'],['Account Number:','207-436-73'],['ABN:','68 493 366 184']];
-  const pw=120,px=(W-pw)/2;
-  payRows.forEach(([l,v],i)=>{doc.setFillColor(...(i%2===0?[or,og,ob]:[255,255,255]));doc.rect(px,y,pw,7,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.2);doc.rect(px,y,pw,7,'S');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(nr,ng,nb);doc.text(l,px+3,y+4.8);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);doc.text(v,px+42,y+4.8);y+=7;});
-  y+=10;doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.3);doc.line(M,y,W-M,y);y+=5;doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(dr,dg,db);doc.text('Confidential Support Document • Thank you for your business',W/2,y,{align:'center'});
-  const fileName='Invoice_'+invNum+'_ShaunCase_'+period.replace(/\s/g,'_').replace(/[^a-zA-Z0-9_]/g,'')+'.pdf';
-  const dataUri=doc.output('datauristring');doc.save(fileName);
-  return{fileName,dataUri,grandTotal};
-}
-
-async function makeSingleInvoice({invNum,invDate,dateFmt,date,start,end,hrs,km,lineItem,bankName,bsb,accNum,abn}){
-  const jsPDF=await loadPDF();const doc=new jsPDF({unit:'mm',format:'a4'});
-  const W=210,H=297,M=18,CW=W-M*2;
-  const[nr,ng,nb]=cn(NAVY),[lr,lg,lb]=[232,229,223],[or,og,ob]=[244,244,241],[dr,dg,db]=[85,85,85];
-  const li=ITEMS[lineItem]||ITEMS['09'];
-  const h=parseFloat(hrs)||0,k=parseFloat(km)||0;
-  const suppAmt=+(h*li.rate).toFixed(2),kmAmt=+(k*KM_RATE).toFixed(2),total=(suppAmt+kmAmt).toFixed(2);
-  let pg=0;
-  const np=()=>{if(pg>0)doc.addPage();pg++;addChrome(doc,'TAX INVOICE — '+invNum,'Tax Invoice',W,H,M,CW,pg);};
-  np();let y=42;
-  const ck=(n=10)=>{if(y+n>H-20){np();y=42;}};
-  const sh=(t)=>{ck(10);doc.setFillColor(nr,ng,nb);doc.rect(M,y,CW,7,'F');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);doc.text(t,M+5,y+5);y+=8;};
-  const fr=(l,v,lw=58)=>{ck(8);doc.setFillColor(or,og,ob);doc.rect(M,y,lw,7,'F');doc.setFillColor(255,255,255);doc.rect(M+lw,y,CW-lw,7,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.3);doc.rect(M,y,CW,7,'S');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(nr,ng,nb);doc.text(l,M+3,y+5);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);doc.text(String(v||'—'),M+lw+3,y+5,{maxWidth:CW-lw-6});y+=7;};
-  sh('INVOICE DETAILS');fr('Invoice Number:',invNum);fr('Invoice Date:',invDate);fr('Service Date:',dateFmt+' ('+start+' – '+end+')');fr('Provider Name:','Achieve Together Care');fr('Provider ABN:',abn||'[ADD ABN]');y+=4;
-  sh('PARTICIPANT DETAILS');fr('Participant:','Shaun Case');fr('NDIS Number:','432005774');fr('Plan Manager:','Plan Partners — ISCP Plan Management');fr('Support Coordinator:','Rachel Hanson');fr('Support Worker:','Daniel Hayward');y+=4;
-  sh('SUPPORT ITEMS CLAIMED');y+=1;
-  const cw={d:72,c:40,q:13,u:14,r:24};const aw=CW-cw.d-cw.c-cw.q-cw.u-cw.r;
-  doc.setFillColor(nr,ng,nb);doc.rect(M,y,CW,8,'F');doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(255,255,255);
-  let cx=M+2;[['Description',cw.d],['Code',cw.c],['Qty',cw.q],['Unit',cw.u],['Rate',cw.r],['Amount',aw]].forEach(([t,w])=>{doc.text(t,cx,y+5.5);cx+=w;});y+=8;
-  const tr2=(d,c,q,u,r,a,bg=[255,255,255])=>{ck(9);doc.setFillColor(...bg);doc.rect(M,y,CW,8,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.25);doc.rect(M,y,CW,8,'S');doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(0,0,0);let x=M+2;[[d,cw.d],[c,cw.c],[q,cw.q],[u,cw.u],[r,cw.r],[a,aw]].forEach(([v,w])=>{doc.text(String(v),x,y+5.5,{maxWidth:w-3});x+=w;});y+=8;};
-  tr2(li.desc,li.code,h.toFixed(1),'hrs','$'+li.rate.toFixed(2),'$'+suppAmt.toFixed(2),[248,248,252]);
-  if(k>0)tr2('Activity Based Transport','NDIS s4.4',k.toFixed(1),'km','$'+KM_RATE.toFixed(2),'$'+kmAmt.toFixed(2));
-  y+=4;
-  const tw=85,tx=M+CW-tw;
-  [['Subtotal','$'+total,false],['GST','GST-Free (s38-38)',false],['TOTAL DUE','$'+total,true]].forEach(([l,v,b])=>{ck(8);doc.setFillColor(...(b?[nr,ng,nb]:[255,255,255]));doc.rect(tx,y,tw,8,'F');doc.setDrawColor(lr,lg,lb);doc.setLineWidth(0.3);doc.rect(tx,y,tw,8,'S');doc.setFont('helvetica',b?'bold':'normal');doc.setFontSize(9);doc.setTextColor(...(b?[255,255,255]:[0,0,0]));doc.text(l,tx+3,y+5.5);doc.text(v,tx+tw-3,y+5.5,{align:'right'});y+=8;});
-  y+=5;sh('PAYMENT DETAILS — PLEASE REMIT TO');fr('Account Name:',bankName||'[Account Name]');fr('BSB:',bsb||'[BSB]');fr('Account Number:',accNum||'[Account Number]');fr('ABN:',abn||'[ABN]');fr('Reference:',invNum+' / Shaun Case / 432005774');fr('Send To:','Plan Partners — ISCP Plan Management');
-  const fileName='Invoice_'+invNum+'_'+date.replace(/-/g,'_')+'_ShaunCase.pdf';
-  const dataUri=doc.output('datauristring');doc.save(fileName);
-  return{fileName,dataUri};
-}
-
-async function makeReport(type,dateFmt,date,start,end,hrs,km,incType,ai){
-  const jsPDF=await loadPDF();const doc=new jsPDF({unit:'mm',format:'a4'});
-  const W=210,H=297,M=18,CW=W-M*2;
-  const[nr,ng,nb]=cn(NAVY),[lr,lg2,lb]=[232,229,223],[or,og,ob]=[244,244,241];
-  const TL={shift:'Daily Shift Report',weekly:'Weekly Support Report',incident:'Incident Report'};
-  const rtype=TL[type];let pg=0;
-  const np=()=>{if(pg>0)doc.addPage();pg++;addChrome(doc,rtype.toUpperCase()+' — '+dateFmt,rtype,W,H,M,CW,pg);};
-  np();let y=42;
-  const ck=(n=10)=>{if(y+n>H-20){np();y=42;}};
-  const sh=(t)=>{ck(10);doc.setFillColor(nr,ng,nb);doc.rect(M,y,CW,7,'F');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);doc.text(t,M+5,y+5);y+=8;};
-  const fr=(l,v,lw=55)=>{ck(8);doc.setFillColor(or,og,ob);doc.rect(M,y,lw,7,'F');doc.setFillColor(255,255,255);doc.rect(M+lw,y,CW-lw,7,'F');doc.setDrawColor(lr,lg2,lb);doc.setLineWidth(0.3);doc.rect(M,y,CW,7,'S');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(nr,ng,nb);doc.text(l,M+3,y+5);doc.setFont('helvetica','normal');doc.setTextColor(0,0,0);doc.text(String(v||'—'),M+lw+3,y+5,{maxWidth:CW-lw-6});y+=7;};
-  const cb=(label,lines)=>{ck(14);doc.setFillColor(or,og,ob);doc.rect(M,y,CW,7,'F');doc.setDrawColor(lr,lg2,lb);doc.setLineWidth(0.3);doc.rect(M,y,CW,7,'S');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(nr,ng,nb);doc.text(label,M+5,y+5);y+=7;lines.forEach(raw=>{const t=raw.trim().replace(/^[-•*]\s*/,'').trim();if(!t)return;const wrapped=doc.splitTextToSize('• '+t,CW-14);const bh=wrapped.length*5.5+4;ck(bh);doc.setFillColor(255,255,255);doc.rect(M,y,CW,bh,'F');doc.setDrawColor(lr,lg2,lb);doc.setLineWidth(0.2);doc.rect(M,y,CW,bh,'S');doc.setFont('helvetica','normal');doc.setFontSize(8.8);doc.setTextColor(0,0,0);wrapped.forEach((wl,wi)=>doc.text(wl,M+8,y+4+(wi*5.5)));y+=bh;});y+=2;};
-  const parse=(txt)=>{const s={};let cur=null,lines=[];txt.split('\n').forEach(l=>{const m=l.match(/^[\*#\s]*(\d+[\.\)]\s+[A-Z][A-Z\s&\/]+?)[\*#\s]*$/);if(m){if(cur)s[cur]=lines;cur=m[1].replace(/^\d+[\.\)]\s+/,'').trim();lines=[];}else if(cur&&l.trim())lines.push(l);});if(cur)s[cur]=lines;return s;};
-  const secs=parse(ai);
-  sh(rtype.toUpperCase()+' DETAILS');
-  fr('Date:',dateFmt);fr('Participant:','Shaun Case');fr('NDIS Number:','432005774');fr('Support Worker:','Daniel Hayward');fr('Support Coordinator:','Rachel Hanson');fr('Plan Manager:','Plan Partners — ISCP Plan Management');
-  if(type!=='weekly')fr('Shift Time:',start+' – '+end);if(hrs)fr('Hours Worked:',hrs+' hrs');if(km)fr('Kilometres Travelled:',km+' km');if(type==='incident'&&incType)fr('Incident Type:',incType);y+=4;
-  const orders={shift:[['SHIFT SUMMARY','1. SHIFT SUMMARY'],['ACTIVITIES COMPLETED','2. ACTIVITIES COMPLETED'],['PARTICIPANT ENGAGEMENT & PRESENTATION','3. PARTICIPANT ENGAGEMENT & PRESENTATION'],['GOALS & PROGRESS','4. GOALS & PROGRESS'],['ADDITIONAL NOTES & RECOMMENDATIONS','5. ADDITIONAL NOTES & RECOMMENDATIONS']],weekly:[['WEEK OVERVIEW','1. WEEK OVERVIEW'],['FUNCTIONAL PRESENTATION','2. FUNCTIONAL PRESENTATION'],['GOAL PROGRESS THIS WEEK','3. GOAL PROGRESS THIS WEEK'],['KEY HIGHLIGHTS','4. KEY HIGHLIGHTS'],['CONCERNS & RECOMMENDATIONS','5. CONCERNS & RECOMMENDATIONS']],incident:[['INCIDENT DESCRIPTION','1. INCIDENT DESCRIPTION'],['IMMEDIATE ACTIONS TAKEN','2. IMMEDIATE ACTIONS TAKEN'],['PARTICIPANT RESPONSE','3. PARTICIPANT RESPONSE'],['NOTIFICATIONS MADE','4. NOTIFICATIONS MADE'],['FOLLOW-UP ACTIONS REQUIRED','5. FOLLOW-UP ACTIONS REQUIRED']]};
-  orders[type].forEach(([key,heading])=>{let lines=secs[key]||[];if(!lines.length){const k=Object.keys(secs).find(k=>k.includes(key.slice(0,8)));if(k)lines=secs[k];}if(!lines.length)return;sh(heading);cb(heading.split('. ')[1]||heading,lines);});
-  const pre={shift:'Shift',weekly:'Weekly',incident:'Incident'}[type];
-  const fileName=pre+'_Report_'+date.replace(/-/g,'_')+'_ShaunCase.pdf';
-  const dataUri=doc.output('datauristring');doc.save(fileName);
-  return{fileName,dataUri};
-}
-
-function buildHTMLPreview({type,dateFmt,start,end,hrs,km,incType,aiText}){
-  const TL={shift:'Daily Shift Report',weekly:'Weekly Support Report',incident:'Incident Report'};
-  const rtype=TL[type]||'Report';
-  const sec=(title,content)=>`<div style="margin-bottom:18px"><div style="background:#1B2A4A;color:#C49A1E;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:7px 14px;border-left:4px solid #C49A1E">${title}</div><div style="background:#f7f8fc;border:1px solid #dde3f0;border-top:none;padding:13px 15px;font-size:13px;line-height:1.85;color:#1B2A4A">${content}</div></div>`;
-  const row=(l,v)=>`<div style="display:flex;border-bottom:1px solid #e8eaf0"><div style="width:42%;background:#f0f3fa;padding:6px 10px;font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px">${l}</div><div style="flex:1;padding:6px 10px;font-size:12.5px;color:#1B2A4A">${v||'—'}</div></div>`;
-  const lines=aiText.split('\n');
-  const sections=[];let cur=null,buf=[];
-  lines.forEach(l=>{const m=l.match(/^(\d+\.\s+[A-Z][A-Z\s&\/]+)$/);if(m){if(cur)sections.push({title:cur,lines:buf});cur=m[1].replace(/^\d+\.\s+/,'').trim();buf=[];}else if(cur&&l.trim())buf.push(l.trim());});
-  if(cur)sections.push({title:cur,lines:buf});
-  const sectHTML=sections.map(s=>{const content=s.lines.map(l=>`<div style="padding:3px 0 3px 14px;border-left:2px solid #C49A1E;margin-bottom:6px;font-size:12.5px;color:#1B2A4A;line-height:1.7">• ${l.replace(/^[-•]\s*/,'').trim()}</div>`).join('');return sec(s.title,content||'<em style="color:#aaa">Not recorded</em>');}).join('');
-  return`<div style="background:#1B2A4A;padding:20px 18px 14px"><div style="font-size:18px;font-weight:700;color:#C49A1E;font-family:Georgia,serif">Achieve Together Care</div><div style="font-size:9px;color:#e8d5a3;letter-spacing:2px;text-transform:uppercase;margin-top:3px">NDIS Disability Services</div><div style="height:2px;background:#C49A1E;margin:12px 0 10px"></div><div style="font-size:13px;font-weight:700;color:#fff;letter-spacing:1px;text-transform:uppercase">${rtype}</div></div><div style="padding:16px 14px"><div style="margin-bottom:18px;border:1px solid #dde3f0;border-radius:4px;overflow:hidden">${row('Date',dateFmt)}${row('Participant','Shaun Case')}${row('NDIS Number','432005774')}${row('Support Worker','Daniel Hayward')}${row('Support Coordinator','Rachel Hanson')}${row('Plan Manager','Plan Partners — ISCP Plan Management')}${type!=='weekly'?row('Shift Time',start+' – '+end):''}${hrs?row('Hours Worked',hrs+' hrs'):''}${km?row('Kilometres',km+' km'):''}${type==='incident'&&incType?row('Incident Type',incType):''}</div>${sectHTML}<div style="background:#1B2A4A;padding:12px 16px;border-radius:4px;margin-top:8px;display:flex;justify-content:space-between;align-items:center"><div style="color:#e8d5a3;font-size:9px;letter-spacing:1px">ACHIEVE TOGETHER CARE · CONFIDENTIAL</div><div style="color:#C49A1E;font-size:9px">${rtype.toUpperCase()}</div></div></div>`;
-}
-
-// ═══════════════════════════════════════════════════════════
-// APP STATE
-// ═══════════════════════════════════════════════════════════
-let state={screen:'calendar',type:'shift',calYear:new Date().getFullYear(),calMonth:new Date().getMonth(),selDate:null,loading:false,result:null,invMode:'weekly',weekDays:[]};
-
-// ═══════════════════════════════════════════════════════════
-// SCREEN MANAGEMENT
-// ═══════════════════════════════════════════════════════════
-function showScreen(s){
-  state.screen=s;
-  document.getElementById('screen-calendar').classList.toggle('active',s==='calendar');
-  document.getElementById('screen-form').classList.toggle('active',s==='form');
-  if(s==='calendar'){updateStats();renderCal();}
-  if(s==='form'){renderForm();}
-  window.scrollTo(0,0);
-}
-function newDoc(type){
-  if(!state.selDate){alert('Tap a date on the calendar first');return;}
-  state.type=type;state.result=null;showScreen('form');
-}
-
-// ═══════════════════════════════════════════════════════════
-// CALENDAR
-// ═══════════════════════════════════════════════════════════
-function calPrev(){if(state.calMonth===0){state.calMonth=11;state.calYear--;}else state.calMonth--;renderCal();}
-function calNext(){if(state.calMonth===11){state.calMonth=0;state.calYear++;}else state.calMonth++;renderCal();}
-
-function renderCal(){
-  const{calYear,calMonth,selDate}=state;
-  const monthEl=document.getElementById('cal-month');
-  const yearEl=document.getElementById('cal-year-label');
-  if(monthEl)monthEl.textContent=MONTHS[calMonth];
-  if(yearEl)yearEl.textContent=calYear;
-  const today=todayStr();
-  const firstDay=new Date(calYear,calMonth,1).getDay();
-  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
-  const grid=document.getElementById('cal-grid');grid.innerHTML='';
-  // empty cells
-  for(let i=0;i<firstDay;i++){
-    const c=document.createElement('div');c.className='cal-cell empty';grid.appendChild(c);
-  }
-  // day cells
-  for(let d=1;d<=daysInMonth;d++){
-    const ds=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const dow=new Date(ds+'T12:00:00').getDay();
-    const isWeekend=dow===0||dow===6;
-    const c=document.createElement('div');
-    c.className='cal-cell';
-    if(isWeekend)c.classList.add('weekend-col');
-    if(ds===today)c.classList.add('today');
-    if(ds===selDate)c.classList.add('sel');
-    else if(inWeek(ds,selDate)){
-      c.classList.add('inweek');
-      const{mon,sun}=getWeekRange(selDate);
-      if(ds===mon)c.classList.add('wstart');
-      if(ds===sun)c.classList.add('wend');
-    }
-    // date number
-    const num=document.createElement('div');
-    num.className='cn';
-    num.textContent=d;
-    if(ds===today)num.textContent='★';
-    c.appendChild(num);
-    // report badges
-    const reps=getReps(ds);
-    if(reps.length>0){
-      c.classList.add('has-docs');
-      const badges=document.createElement('div');
-      badges.className='cal-badges';
-      // show up to 4 badges, group by type
-      const seen={};
-      reps.forEach(r=>{
-        if(!seen[r.type]){
-          seen[r.type]=true;
-          const b=document.createElement('div');
-          b.className='cal-badge '+(r.type||'shift');
-          b.title=r.label||r.type;
-          badges.appendChild(b);
-        }
-      });
-      c.appendChild(badges);
-    }
-    c.onclick=()=>selectDate(ds);
-    grid.appendChild(c);
-  }
-  const hint=document.getElementById('new-doc-hint');
-  if(hint)hint.textContent=selDate?fmtDateLong(selDate):'Select a date first';
-}
-
-function selectDate(ds){
-  state.selDate=ds;renderCal();renderDayPanel();
-  showScreen('form');
-  const fi=document.getElementById('f-date');if(fi)fi.value=ds;
-}
-
-
-function syncAll(){
-  const icon=document.getElementById('sync-icon');
-  if(icon)icon.textContent='⏳';
-  try{const s=localStorage.getItem('atc_reports');if(s)STORE=JSON.parse(s);}catch(e){}
-  setTimeout(()=>{updateStats();renderCal();if(icon){icon.textContent='✅';setTimeout(()=>icon.textContent='🔄',1500);}},400);
-}
-function updateStats(){
-  document.getElementById('cnt-shift').textContent=countType('shift');
-  document.getElementById('cnt-weekly').textContent=countType('weekly');
-  document.getElementById('cnt-incident').textContent=countType('incident');
-}
-
-// ═══════════════════════════════════════════════════════════
-// DAY PANEL
-// ═══════════════════════════════════════════════════════════
-function renderDayPanel(){
-  const panel=document.getElementById('day-panel');
-  if(!state.selDate){panel.classList.add('hidden');return;}
-  const reps=getReps(state.selDate);
-  const dayLabel=fmtDateLong(state.selDate);
-  const TYPE_COLOR={shift:'#1a4f9c',weekly:'#1c6e45',incident:'#b02e1a',invoice:'#5b2d8e'};
-  const TYPE_ICON={shift:'📋',weekly:'📆',incident:'🚨',invoice:'🧾'};
-  let html=`<div class="day-panel">
-    <div style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <div style="font-family:'Fraunces',serif;font-size:14px;color:var(--gold);font-weight:500;">${dayLabel}</div>
-        <div style="color:var(--text3);font-size:10px;margin-top:2px;letter-spacing:0.5px;">${reps.length} document${reps.length!==1?'s':''} saved</div>
-      </div>
-    </div>`;
-  if(reps.length===0){
-    html+=`<div style="padding:24px 16px;text-align:center;color:var(--text3);font-size:13px;font-style:italic;">No reports saved yet for this day.</div>`;
-  } else {
-    html+=`<div style="padding:12px 14px;">`;
-    reps.forEach(r=>{
-      const col=TYPE_COLOR[r.type]||NAVY;const icon=TYPE_ICON[r.type]||'📄';
-      const gcUrl=buildGcUrl(state.selDate,r.label,r.time);
-      html+=`<div class="rep-card" style="border-color:${col}20;">
-        <div style="background:${col};padding:10px 13px;display:flex;align-items:center;gap:8px;">
-          <span style="font-size:18px;">${icon}</span>
-          <div style="flex:1;">
-            <div style="color:#fff;font-weight:700;font-size:12px;font-family:'Fraunces',serif;">${r.label}</div>
-            <div style="color:rgba(255,255,255,.6);font-size:10px;margin-top:1px;">${r.time?r.time.replace('-',' – ')+' · ':''}${r.hrs?r.hrs+' hrs':''}${r.km?' · '+r.km+' km':''}</div>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;">
-            <span style="font-size:20px;">☁️</span><span>Open Drive</span>
-          </button>
-            <span style="font-size:20px;">📅</span><span>Add to Calendar</span>
-          </button>
-        </div>
-      </div>`;
-    });html+=`</div>`;
-  }
-  html+=`</div>`;panel.innerHTML=html;panel.classList.remove('hidden');
-}
-
-function buildGcUrl(date,label,timeStr){
-  try{const d=date.replace(/-/g,'');let s,e;if(timeStr&&timeStr.includes('-')){const[st,en]=timeStr.split('-');s=d+'T'+st.replace(':','')+'00';e=d+'T'+en.replace(':','')+'00';}else{s=d;e=d;}return`https://calendar.google.com/calendar/render?action=TEMPLATE&text=ATC+—+${encodeURIComponent(label)}+—+Shaun+Case&dates=${s}/${e}&details=Achieve+Together+Care+NDIS+Support+Document`;}catch{return'https://calendar.google.com';}
-}
-
-// ═══════════════════════════════════════════════════════════
-// FORM
-// ═══════════════════════════════════════════════════════════
-function setType(t){state.type=t;renderForm();}
-function setInvMode(m){
-  state.invMode=m;
-  document.getElementById('inv-mode-weekly').classList.toggle('active',m==='weekly');
-  document.getElementById('inv-mode-single').classList.toggle('active',m==='single');
-  document.getElementById('inv-weekly-form').classList.toggle('hidden',m!=='weekly');
-  document.getElementById('inv-single-form').classList.toggle('hidden',m!=='single');
-}
-
-const TYPE_CFG={
-  shift:{label:'Daily Shift Report',icon:'📋',color:'rgba(26,79,156,0.15)',borderColor:'rgba(26,79,156,0.4)',textColor:'#7eb3ff',btnBg:'linear-gradient(135deg,#1a4f9c,#2563c0)'},
-  weekly:{label:'Weekly Support Report',icon:'📆',color:'rgba(28,110,69,0.15)',borderColor:'rgba(34,133,79,0.4)',textColor:'#6ecf9a',btnBg:'linear-gradient(135deg,#1c6e45,#22854f)'},
-  incident:{label:'Incident Report',icon:'🚨',color:'rgba(176,46,26,0.15)',borderColor:'rgba(214,59,34,0.4)',textColor:'#ff8a75',btnBg:'linear-gradient(135deg,#b02e1a,#d63b22)'},
-  invoice:{label:'Tax Invoice',icon:'🧾',color:'rgba(91,45,142,0.15)',borderColor:'rgba(112,56,176,0.4)',textColor:'#c09af5',btnBg:'linear-gradient(135deg,#5b2d8e,#7038b0)'},
-};
-
-function renderForm(){
-  const t=state.type;const cfg=TYPE_CFG[t];
-  ['shift','weekly','incident','invoice'].forEach(p=>{const el=document.getElementById('pill-'+p);el.className='pill'+(p===t?' active-'+p:'');});
-  document.getElementById('form-report').classList.toggle('hidden',t==='invoice');
-  document.getElementById('form-invoice').classList.toggle('hidden',t!=='invoice');
-  document.getElementById('inc-type-wrap').classList.toggle('hidden',t!=='incident');
-  const titles={shift:'Shift Details',weekly:'Week Details',incident:'Incident Details'};
-  const cardTitle=document.getElementById('form-card-title');if(cardTitle)cardTitle.textContent=titles[t]||'Details';
-  const badge=document.getElementById('type-badge');
-  badge.style.background=cfg.color;badge.style.borderColor=cfg.borderColor;badge.style.color=cfg.textColor;
-  badge.textContent=cfg.icon+' '+cfg.label;
-  const btn=document.getElementById('gen-btn');
-  btn.style.background=cfg.btnBg;
-  btn.textContent=cfg.icon+' '+(t==='invoice'?'Generate Invoice PDF':'Generate '+cfg.label+' + PDF');
-  const fd=document.getElementById('f-date');if(fd&&!fd.value)fd.value=state.selDate||todayStr();
-  updateHrs();
-  if(t==='invoice'&&state.weekDays.length===0){initWeekDays();}
-  if(t==='invoice'){renderWeekDays();renderWeekTotals();}
-}
-
-function updateHrs(){
-  const s=document.getElementById('f-start')?.value||'09:00';
-  const e=document.getElementById('f-end')?.value||'15:00';
-  const h=calcHrs(s,e);const km=document.getElementById('f-km')?.value||'45';
-  const badge=document.getElementById('hrs-badge');
-  if(badge){badge.textContent=h+' hrs · '+km+' km';badge.classList.toggle('hidden',!h);}
-}
-
-// ═══════════════════════════════════════════════════════════
-// WEEKLY INVOICE DAYS
-// ═══════════════════════════════════════════════════════════
-function initWeekDays(){
-  const today=todayStr();const{mon}=getWeekRange(today);state.weekDays=[];
-  for(let i=0;i<5;i++){const d=new Date(mon+'T12:00:00');d.setDate(d.getDate()+i);const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');state.weekDays.push({date:ds,start:'09:00',end:'15:00',km:'45',active:true});}
-  const wi=document.getElementById('wi-period');if(wi){const last=state.weekDays[state.weekDays.length-1].date;wi.value=fmtDateLong(mon).split(',')[1].trim()+' – '+fmtDateLong(last).split(',')[1].trim();}
-  const wdate=document.getElementById('wi-date');if(wdate)wdate.value=state.weekDays[state.weekDays.length-1]?.date||todayStr();
-}
-function addWeekDay(){state.weekDays.push({date:todayStr(),start:'09:00',end:'15:00',km:'45',active:true});renderWeekDays();renderWeekTotals();}
-function renderWeekDays(){
-  const list=document.getElementById('week-days-list');if(!list)return;
-  const DAYLABELS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  list.innerHTML=state.weekDays.map((d,i)=>{
-    const dow=d.date?DAYLABELS[new Date(d.date+'T12:00:00').getDay()]:'';const h=calcHrs(d.start,d.end);
-    return`<div class="day-row ${d.active?'':'inactive'}">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="checkbox" ${d.active?'checked':''} onchange="toggleDay(${i},this.checked)" style="width:18px;height:18px;accent-color:#7038b0;">
-          <span style="font-weight:700;font-size:13px;color:#c09af5;">${dow}</span>
-        </div>
-        <span style="font-size:11px;color:var(--text3);">${h?h+' hrs':''}</span>
-        <button onclick="removeWeekDay(${i})" style="background:transparent;border:none;color:#ff8a75;font-size:18px;cursor:pointer;padding:0 4px;line-height:1;">×</button>
-      </div>
-      <div class="g3">
-        <div><label class="lbl">Date</label><input type="date" value="${d.date}" onchange="updateDay(${i},'date',this.value)"></div>
-        <div><label class="lbl">Start</label><input type="time" value="${d.start}" onchange="updateDay(${i},'start',this.value)"></div>
-        <div><label class="lbl">Finish</label><input type="time" value="${d.end}" onchange="updateDay(${i},'end',this.value)"></div>
-      </div>
-      <div style="margin-top:8px;"><label class="lbl">KM</label><input type="number" value="${d.km}" onchange="updateDay(${i},'km',this.value)"></div>
-    </div>`;
-  }).join('');
-}
-function updateDay(i,field,val){state.weekDays[i][field]=val;renderWeekDays();renderWeekTotals();}
-function toggleDay(i,v){state.weekDays[i].active=v;renderWeekDays();renderWeekTotals();}
-function removeWeekDay(i){state.weekDays.splice(i,1);renderWeekDays();renderWeekTotals();}
-function renderWeekTotals(){
-  const el=document.getElementById('week-totals');if(!el)return;
-  const RATES={0:127.43,6:98.83};let hrs=0,km=0,amt=0;
-  state.weekDays.filter(d=>d.active).forEach(d=>{const h=calcHrs(d.start,d.end);const k=parseFloat(d.km)||0;const dow=d.date?new Date(d.date+'T12:00:00').getDay():1;const rate=RATES[dow]||70.23;hrs+=h;km+=k;amt+=h*rate+k*0.97;});
-  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span style="color:var(--text2);">Total Hours</span><strong style="color:var(--text);">${hrs.toFixed(1)} hrs</strong></div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span style="color:var(--text2);">Total KM</span><strong style="color:var(--text);">${km} km</strong></div>
-    <div style="display:flex;justify-content:space-between;padding:12px 14px;background:linear-gradient(135deg,rgba(91,45,142,0.3),rgba(112,56,176,0.2));border:1px solid rgba(112,56,176,0.3);border-radius:8px;margin-top:2px;">
-      <span style="font-weight:700;color:var(--text);">Estimated Total</span><strong style="color:var(--gold);font-family:'Fraunces',serif;font-size:15px;">$${amt.toFixed(2)}</strong>
-    </div>
-  </div>`;
-}
-
-// ═══════════════════════════════════════════════════════════
-// GENERATE
-// ═══════════════════════════════════════════════════════════
-async function generate(){
-  const errEl=document.getElementById('form-err');errEl.classList.add('hidden');
-  const btn=document.getElementById('gen-btn');const origText=btn.textContent;
-  btn.innerHTML='<div class="spinner"></div> Building...';btn.disabled=true;
-  try{
-    const t=state.type;let result=null;
-    if(t==='invoice'){
-      const mode=state.invMode;
-      if(mode==='weekly'){
-        const active=state.weekDays.filter(d=>d.active&&calcHrs(d.start,d.end)>0);
-        if(!active.length){showErr('Please add at least one active shift day.');return;}
-        const invNum=document.getElementById('wi-num').value||'INV-001';
-        const wiDate=document.getElementById('wi-date').value;
-        const invDate=wiDate?new Date(wiDate+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):todayStr();
-        const period=document.getElementById('wi-period').value||'This week';
-        result=await makeWeeklyInvoice({invNum,invDate,period,days:state.weekDays,lineItem:'09',bankName:'Achieve Together Care',bsb:'067-873',accNum:'207-436-73',abn:'68 493 366 184'});
-        androidDownload(result.dataUri,result.fileName);
-        const entry={type:'invoice',label:'Weekly Invoice — '+period,time:'',hrs:'',km:'',fileName:result.fileName,dataUri:result.dataUri};
-        state.weekDays.filter(d=>d.active).forEach(d=>saveRep(d.date,{...entry}));
-        result.htmlPreview='';result.aiText=null;result.dateFmt=period;result.start='';result.end='';
-      } else {
-        const invNum=document.getElementById('si-num').value||'INV-001';
-        const siDate=document.getElementById('si-date').value||todayStr();
-        const sDate=document.getElementById('si-sdate').value||todayStr();
-        const start=document.getElementById('si-start').value||'09:00';
-        const end=document.getElementById('si-end').value||'15:00';
-        const km=document.getElementById('si-km').value||'45';
-        const li=document.getElementById('si-item').value||'09';
-        const hrs=calcHrs(start,end).toString();
-        const invDate=new Date(siDate+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
-        const dateFmt=fmtDateLong(sDate);
-        result=await makeSingleInvoice({invNum,invDate,dateFmt,date:sDate,start,end,hrs,km,lineItem:li,bankName:'Achieve Together Care',bsb:'067-873',accNum:'207-436-73',abn:'68 493 366 184'});
-        androidDownload(result.dataUri,result.fileName);
-        saveRep(sDate,{type:'invoice',label:'Tax Invoice '+invNum,time:start+'-'+end,hrs,km,fileName:result.fileName,dataUri:result.dataUri});
-        result.htmlPreview='';result.aiText=null;result.dateFmt=dateFmt;result.start=start;result.end=end;
-      }
-    } else {
-      const notes=document.getElementById('f-notes').value.trim();
-      if(!notes){showErr('Please write what happened first!');return;}
-      if(!apiKey){showErr('Please enter your Anthropic API key — tap 🔑 in the header.');return;}
-      const date=document.getElementById('f-date').value||todayStr();
-      const start=document.getElementById('f-start').value||'09:00';
-      const end=document.getElementById('f-end').value||'15:00';
-      const km=document.getElementById('f-km').value||'45';
-      const hrs=calcHrs(start,end).toString();
-      const dateFmt=fmtDateLong(date);
-      const incType=document.getElementById('f-inc-type')?.value||'';
-      const TYPE_LABELS={shift:'Daily Shift Report',weekly:'Weekly Support Report',incident:'Incident Report'};
-      const SECTIONS={shift:'1. SHIFT SUMMARY\n2. ACTIVITIES COMPLETED\n3. PARTICIPANT ENGAGEMENT & PRESENTATION\n4. GOALS & PROGRESS\n5. ADDITIONAL NOTES & RECOMMENDATIONS',weekly:'1. WEEK OVERVIEW\n2. FUNCTIONAL PRESENTATION\n3. GOAL PROGRESS THIS WEEK\n4. KEY HIGHLIGHTS\n5. CONCERNS & RECOMMENDATIONS',incident:'1. INCIDENT DESCRIPTION\n2. IMMEDIATE ACTIONS TAKEN\n3. PARTICIPANT RESPONSE\n4. NOTIFICATIONS MADE\n5. FOLLOW-UP ACTIONS REQUIRED'};
-      const prompt=`You are writing a professional NDIS support worker report for Achieve Together Care.\n\nPARTICIPANT: Shaun Case | NDIS: 432005774\nSUPPORT WORKER: Daniel Hayward\nSUPPORT COORDINATOR: Rachel Hanson\nPLAN MANAGER: Plan Partners — ISCP Plan Management\nDATE: ${dateFmt}\nSHIFT: ${start} – ${end} (${hrs} hours)${km?' | KM: '+km:''}${t==='incident'?' | INCIDENT TYPE: '+incType:''}\n\nWORKER NOTES:\n${notes}\n\nWrite a complete professional ${TYPE_LABELS[t]} with detailed, meaningful content.\n\nSTRICT FORMATTING — follow exactly:\n1. Use ONLY these section headings on their own line:\n${SECTIONS[t]}\n\n2. After each heading, write 4-6 bullet points starting with "- "\n3. Each bullet point must be a complete, detailed professional sentence\n4. NO markdown at all: no **, no *, no ##, no ---, no bold, no italic\n5. Third person only. Professional NDIS language.`;
-      const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
-      if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'API error '+res.status);}
-      const data=await res.json();
-      const ai=data.content?.map(b=>b.text||'').join('')||'';
-      const clean=ai.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1').replace(/^#{1,6}\s+/gm,'').replace(/^-{3,}\s*$/gm,'');
-      result=await makeReport(t,dateFmt,date,start,end,hrs,km,incType,clean);
-      androidDownload(result.dataUri,result.fileName);
-      const htmlPreview=buildHTMLPreview({type:t,dateFmt,start,end,hrs,km,incType,aiText:clean});
-      saveRep(date,{type:t,label:TYPE_LABELS[t],time:start+'-'+end,hrs,km,fileName:result.fileName,dataUri:result.dataUri,htmlPreview,aiText:clean});
-      result.htmlPreview=htmlPreview;result.aiText=clean;result.dateFmt=dateFmt;result.start=start;result.end=end;result.hrs=hrs;result.km=km;
-      state.selDate=date;
-      // Build Google Calendar pre-filled URL
-      const gcalDate=(date||todayStr()).replace(/-/g,'');
-      const gcalStart=gcalDate+'T'+(start||'09:00').replace(':','')+'00';
-      const gcalEnd=gcalDate+'T'+(end||'15:00').replace(':','')+'00';
-      const gcalTitle=encodeURIComponent('ATC Shift — Shaun Case — '+(TYPE_LABELS[t]||'Report'));
-      const gcalDetails=encodeURIComponent('Achieve Together Care | Worker: Daniel Hayward | NDIS: 432005774 | '+dateFmt);
-      result.gcalUrl='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+gcalTitle+'&dates='+gcalStart+'/'+gcalEnd+'&details='+gcalDetails;
-    }
-    state.result=result;showResult(result);
-  } catch(e){showErr('Error: '+e.message);}
-  finally{btn.textContent=origText;btn.disabled=false;}
-}
-
-// ═══════════════════════════════════════════════════════════
-// ACTION SHEET — post-generate sync flow
-// ═══════════════════════════════════════════════════════════
-function showActionSheet(r){
-  const overlay=document.getElementById('action-sheet-overlay');
-  const fname=document.getElementById('action-sheet-filename');
-  if(fname){
-    const label=r.fileName||'Document';
-    fname.textContent='📄 '+label+' — PDF saved to your phone';
-  }
-  // store gcal url on state for the sheet to use
-  state.lastGcalUrl=r.gcalUrl||'';
-  if(overlay)overlay.classList.remove('hidden');
-}
-function closeActionSheet(){
-  const overlay=document.getElementById('action-sheet-overlay');
-  if(overlay)overlay.classList.add('hidden');
-  updateStats(); renderCal();
-  if(state.selDate) renderDayPanel(state.selDate);
-  // refresh in-app calendar stats
+// \u2500\u2500 TRANSPORT / INCIDENT TOGGLES \u2500\u2500
+function toggleTransport(){
+  const yes=document.getElementById('transportUsed').value==='yes';
+  document.getElementById('kmWrap').style.display=yes?'block':'none';
+  document.getElementById('vehicleWrap').style.display=yes?'block':'none';
   updateStats();
-  renderCal();
 }
-function actionSheetDrive(){
-  closeActionSheet();
-  setTimeout(()=>openDrive(),200);
+function toggleIncident(){
+  const yes=document.getElementById('incidentOccurred').value==='yes';
+  document.getElementById('incTypeWrap').style.display=yes?'block':'none';
+  document.getElementById('incDescWrap').style.display=yes?'block':'none';
 }
-function actionSheetGCal(){
-  const url=state.lastGcalUrl;
-  if(url){
-    const a=document.createElement('a');
-    a.href=url;a.target='_blank';a.rel='noopener noreferrer';
-    a.style.cssText='position:fixed;opacity:0;top:0;left:0;';
-    document.body.appendChild(a);a.click();
-    setTimeout(()=>{try{document.body.removeChild(a);}catch(e){}},400);
+
+// \u2500\u2500 STATS BAR \u2500\u2500
+function updateStats(){
+  // hours
+  const s=document.getElementById('startTime').value;
+  const e=document.getElementById('endTime').value;
+  if(s&&e){
+    const diff=(toMin(e)-toMin(s))/60;
+    document.getElementById('sHours').textContent=diff>0?diff.toFixed(1)+'h':'\u2014';
   }
-}
-function actionSheetATCCal(){
-  closeActionSheet();
-  setTimeout(()=>openATCCal(),200);
-}
-
-
-function showErr(msg){
-  const el=document.getElementById('form-err');el.textContent='⚠️ '+msg;el.classList.remove('hidden');
-  const btn=document.getElementById('gen-btn');
-  btn.style.background=TYPE_CFG[state.type].btnBg;
-  btn.textContent=TYPE_CFG[state.type].icon+' '+(state.type==='invoice'?'Generate Invoice PDF':'Generate '+TYPE_CFG[state.type].label+' + PDF');
-  btn.disabled=false;
-}
-
-function showResult(r){
-  document.getElementById('result-area').classList.remove('hidden');
-  updateStats(); renderCal();
-  setTimeout(()=>showActionSheet(r),500);
-  // Show Drive upload prompt after short delay
-  
-  document.getElementById('result-filename').textContent=r.fileName;
-  document.getElementById('view-cal-btn').textContent='📅 View on Calendar — '+(r.dateFmt||'');
-  if(r.aiText){
-    document.getElementById('report-preview-wrap').classList.remove('hidden');
-    const details=document.getElementById('preview-details');
-    const pairs=[['Date',r.dateFmt],['Worker','Daniel Hayward'],['Shift',(r.start&&r.end)?r.start+' – '+r.end:''],['Hours',r.hrs?r.hrs+' hrs':''],['KM',r.km?r.km+' km':''],['Plan Mgr','Plan Partners']];
-    details.innerHTML=pairs.map(([l,v])=>v?`<div><strong>${l}:</strong> ${v}</div>`:'').join('');
-    document.getElementById('preview-date').textContent=r.dateFmt||'';
-    const lines=r.aiText.split('\n');const sections=[];let cur=null,buf=[];
-    lines.forEach(l=>{const clean=l.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1').replace(/^#{1,6}\s+/,'').trim();const isHead=clean.match(/^\d+\.\s+[A-Z][A-Z\s&\/]+$/);if(isHead){if(cur!==null)sections.push({title:cur,bullets:buf});cur=clean.replace(/^\d+\.\s+/,'');buf=[];}else if(cur!==null&&clean.match(/^[-•]\s+/)){buf.push(clean.replace(/^[-•]\s+/,''));}});
-    if(cur!==null)sections.push({title:cur,bullets:buf});
-    const secEl=document.getElementById('preview-sections');
-    secEl.innerHTML=sections.map((s,si)=>`
-      <div class="rpt-sec-hd"><span>${s.title}</span></div>
-      <div class="rpt-sec-body ${si%2?'alt':''}">
-        ${s.bullets.map(b=>`<div class="rpt-bullet"><span style="color:${GOLD};font-weight:700;flex-shrink:0">•</span><span>${b}</span></div>`).join('')}
-        ${s.bullets.length===0?'<div style="color:#aaa;font-style:italic;font-size:11px;">No content</div>':''}
-      </div>`).join('');
-  } else {
-    document.getElementById('report-preview-wrap').classList.add('hidden');
+  // date
+  const d=document.getElementById('shiftDate').value;
+  if(d){
+    const dt=new Date(d+'T00:00:00');
+    document.getElementById('sDate').textContent=dt.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
   }
+  // km
+  const km=document.getElementById('kilometres').value;
+  const tr=document.getElementById('transportUsed').value;
+  document.getElementById('sKm').textContent=tr==='yes'&&km?km+' km':'\u2014';
+  // type
+  const t=document.getElementById('supportType').value;
+  document.getElementById('sType').textContent=t.split(' ')[0];
 }
+function toMin(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
 
-function viewFullReport(){if(!state.result?.htmlPreview)return;document.getElementById('modal-filename').textContent=state.result.fileName||'';document.getElementById('report-modal-body').innerHTML=state.result.htmlPreview;document.getElementById('report-modal').classList.remove('hidden');}
-function closeModal(){document.getElementById('report-modal').classList.add('hidden');}
-function modalDownload(){if(state.result)androidDownload(state.result.dataUri,state.result.fileName);}
-function reDownload(){if(state.result)androidDownload(state.result.dataUri,state.result.fileName);}
-function viewOnCal(){
-  const d=document.getElementById('f-date')?.value||state.selDate;
-  if(d) state.selDate=d;
-  updateStats(); renderCal();
-  showScreen('calendar');
-  setTimeout(()=>{
-    renderDayPanel(state.selDate);
-    const dp=document.getElementById('day-panel');
-    if(dp) dp.scrollIntoView({behavior:'smooth',block:'start'});
-  },100);
-}
-function resetForm(){state.result=null;document.getElementById('result-area').classList.add('hidden');document.getElementById('form-err').classList.add('hidden');document.getElementById('f-notes').value='';}
+// \u2500\u2500 GENERATE \u2500\u2500
+async function generateReport(){
+  const apiKey=getApiKey();
+  if(!apiKey){
+    toast('Please add your Anthropic API key first \u2014 click "API Key" in the top right','error');
+    document.getElementById('apiCard').style.display='block';
+    document.getElementById('apiKeyInput').focus();
+    return;
+  }
 
-// ═══════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════
+  const date=document.getElementById('shiftDate').value;
+  const start=document.getElementById('startTime').value;
+  const end=document.getElementById('endTime').value;
+  if(!date||!start||!end){
+    toast('Please fill in shift date and times','error'); return;
+  }
 
-function exportData(){
+  const data=collectFormData();
+  showLoading('Writing shift report...');
+
+  const prompt=buildPrompt(data);
+
   try{
-    const data={
-      reports: STORE,
-      apiKey: apiKey,
-      exportedAt: new Date().toISOString(),
-      version: '1.0'
-    };
-    const json=JSON.stringify(data,null,2);
-    const blob=new Blob([json],{type:'application/json'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download='ATC_Reports_Backup_'+new Date().toISOString().slice(0,10)+'.json';
-    a.style.cssText='position:fixed;opacity:0;top:0;left:0';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},500);
-    // Show confirmation
-    const icon=document.getElementById('sync-icon');
-    if(icon){const orig=icon.textContent;icon.textContent='✅';setTimeout(()=>icon.textContent=orig,2000);}
-  }catch(e){alert('Export failed: '+e.message);}
-}
-
-function importData(event){
-  const file=event.target.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      const data=JSON.parse(e.target.result);
-      if(!data.reports){alert('Invalid backup file.');return;}
-      // Merge reports (don't overwrite, merge by date)
-      let added=0;
-      Object.keys(data.reports).forEach(date=>{
-        if(!STORE[date])STORE[date]=[];
-        data.reports[date].forEach(rep=>{
-          // Avoid duplicates by checking fileName
-          const exists=STORE[date].some(r=>r.fileName===rep.fileName);
-          if(!exists){STORE[date].push(rep);added++;}
-        });
-      });
-      localStorage.setItem('atc_reports',JSON.stringify(STORE));
-      // Restore API key if not already set
-      if(data.apiKey&&!apiKey){
-        apiKey=data.apiKey;
-        persistApiKey(data.apiKey);
-      }
-      updateStats();renderCal();
-      alert('✅ Imported '+added+' reports successfully!');
-    }catch(err){alert('Import failed: '+err.message);}
-  };
-  reader.readAsText(file);
-  // Reset input so same file can be imported again
-  event.target.value='';
-}
-
-// ═══════════════════════════════════════════════════════════
-// AUTO WEEKLY — Friday 4pm generation
-// ═══════════════════════════════════════════════════════════
-function getWeekFriToThu(fromDate){
-  const d=new Date(fromDate+'T12:00:00');
-  const dow=d.getDay();
-  const sinceF=(dow>=5)?dow-5:dow+2;
-  const fri=new Date(d);fri.setDate(d.getDate()-sinceF);
-  const thu=new Date(fri);thu.setDate(fri.getDate()+6);
-  const fmt=n=>n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
-  return{fri:fmt(fri),thu:fmt(thu)};
-}
-function getShiftsForWeek(fri,thu){
-  const shifts=[];
-  Object.keys(STORE).sort().forEach(date=>{
-    if(date>=fri&&date<=thu){
-      STORE[date].forEach(r=>{if(r.type==='shift')shifts.push({...r,date});});
-    }
-  });
-  return shifts;
-}
-function fmtPeriodLabel(fri,thu){
-  const f=new Date(fri+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'});
-  const t=new Date(thu+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'});
-  return f+' \u2013 '+t;
-}
-function autoGenerateWeekly(){
-  const today=todayStr();
-  const{fri,thu}=getWeekFriToThu(today);
-  const shifts=getShiftsForWeek(fri,thu);
-  const period=fmtPeriodLabel(fri,thu);
-  showAutoWeeklyPanel(fri,thu,shifts,period);
-}
-function showAutoWeeklyPanel(fri,thu,shifts,period){
-  const existing=document.getElementById('auto-weekly-overlay');
-  if(existing)existing.remove();
-  const totalHrs=shifts.reduce((a,s)=>a+(parseFloat(s.hrs)||0),0).toFixed(1);
-  const totalKm=shifts.reduce((a,s)=>a+(parseFloat(s.km)||0),0);
-  const overlay=document.createElement('div');
-  overlay.id='auto-weekly-overlay';
-  overlay.style.cssText='position:fixed;inset:0;z-index:20000;background:rgba(4,10,22,0.95);display:flex;align-items:flex-end;justify-content:center;';
-  const shiftRows=shifts.length===0
-    ?'<div style="color:#6b6258;font-size:13px;font-style:italic;">No shifts recorded this week yet</div>'
-    :shifts.map(s=>'<div style="display:flex;justify-content:space-between;font-size:12px;color:#f0ece3;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span>\ud83d\udccb '+new Date(s.date+'T12:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'})+'</span><span style="color:#a8a090;">'+(s.hrs||'?')+' hrs \u00b7 '+(s.km||'?')+' km</span></div>').join('');
-  const disabledAttr=shifts.length===0?'disabled style="opacity:0.4;cursor:not-allowed;"':'';
-  overlay.innerHTML='<div style="background:linear-gradient(160deg,#13203d,#080f1e);border:1px solid rgba(196,154,30,0.3);border-bottom:none;border-radius:24px 24px 0 0;padding:20px 20px 0;width:100%;max-width:520px;box-shadow:0 -16px 60px rgba(0,0,0,0.8);">'
-    +'<div style="width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,0.15);margin:0 auto 18px;"></div>'
-    +'<div style="font-size:30px;text-align:center;margin-bottom:8px;">\ud83d\udcc5</div>'
-    +'<div style="font-family:\'Fraunces\',serif;font-size:22px;font-weight:500;color:#f0ece3;text-align:center;margin-bottom:4px;">Weekly Auto-Generate</div>'
-    +'<div style="font-size:12px;color:#a8a090;text-align:center;margin-bottom:16px;">'+period+'</div>'
-    +'<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px;margin-bottom:14px;">'
-    +'<div style="font-size:10px;font-weight:800;color:#6b6258;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">THIS WEEK\'S SHIFTS</div>'
-    +shiftRows
-    +'<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800;color:#c49a1e;padding:8px 0 0;margin-top:4px;"><span>TOTAL</span><span>'+totalHrs+' hrs \u00b7 '+totalKm+' km</span></div>'
-    +'</div>'
-    +'<div style="font-size:10px;font-weight:800;color:#6b6258;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">EXTRA NOTES (optional)</div>'
-    +'<textarea id="auto-weekly-notes" placeholder="Any extra context, goals progress, concerns..." style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#f0ece3;border-radius:10px;padding:11px 13px;font-size:13px;font-family:\'Cabinet Grotesk\',sans-serif;min-height:70px;resize:none;margin-bottom:14px;"></textarea>'
-    +'<div style="display:flex;flex-direction:column;gap:9px;margin-bottom:16px;">'
-    +'<button onclick="runAutoWeekly(\''+fri+'\',\''+thu+'\',\''+period+'\')" '+disabledAttr+' style="width:100%;padding:17px;border:none;border-radius:14px;background:linear-gradient(135deg,#1c6e45,#22a05a);color:#fff;font-family:\'Fraunces\',serif;font-size:16px;font-weight:700;cursor:pointer;">\ud83d\udcc6 Generate Weekly Report + Invoice</button>'
-    +'<button onclick="document.getElementById(\'auto-weekly-overlay\').remove()" style="width:100%;padding:14px;border:1px solid rgba(255,255,255,0.1);border-radius:14px;background:transparent;color:#a8a090;font-family:\'Fraunces\',serif;font-size:14px;font-weight:600;cursor:pointer;">Not now</button>'
-    +'</div>'
-    +'<div style="height:max(env(safe-area-inset-bottom,0px),16px);"></div>'
-    +'</div>';
-  document.body.appendChild(overlay);
-}
-async function runAutoWeekly(fri,thu,period){
-  const allBtns=document.querySelectorAll('#auto-weekly-overlay button');
-  allBtns.forEach(b=>{b.disabled=true;});
-  const firstBtn=allBtns[0];
-  if(firstBtn)firstBtn.innerHTML='<div class="spinner" style="margin:0 auto;width:20px;height:20px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;"></div>';
-  const shifts=getShiftsForWeek(fri,thu);
-  const extraNotes=document.getElementById('auto-weekly-notes')?.value.trim()||'';
-  const totalHrs=shifts.reduce((a,s)=>a+(parseFloat(s.hrs)||0),0).toFixed(1);
-  const totalKm=shifts.reduce((a,s)=>a+(parseFloat(s.km)||0),0);
-  const shiftSummaries=shifts.map(s=>fmtDateLong(s.date)+': '+(s.hrs||'?')+' hrs, '+(s.km||'?')+' km. '+(s.notes||s.label||'')).join('\n');
-  try{
-    if(!apiKey)throw new Error('No API key — tap \ud83d\udd11 to add it');
-    const prompt='You are writing a professional NDIS Weekly Support Report for Achieve Together Care.\n\nPARTICIPANT: Shaun Case | NDIS: 432005774\nSUPPORT WORKER: Daniel Hayward\nPERIOD: '+period+'\nTOTAL HOURS: '+totalHrs+' hrs | TOTAL KM: '+totalKm+' km\n\nSHIFTS THIS WEEK:\n'+shiftSummaries+'\n'+(extraNotes?'\nADDITIONAL NOTES: '+extraNotes:'')+'\n\nWrite a professional weekly NDIS support report with these exact sections:\n1. WEEK OVERVIEW\n2. FUNCTIONAL PRESENTATION\n3. GOAL PROGRESS THIS WEEK\n4. KEY HIGHLIGHTS\n5. CONCERNS & RECOMMENDATIONS\n\nEach section: heading then bullet points starting with "- ". Professional, person-centred. 300-400 words.';
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
-    if(!resp.ok){const e=await resp.json();throw new Error(e.error?.message||'API error');}
-    const data=await resp.json();
-    const aiText=data.content[0].text;
-    // Weekly report PDF
-    const weeklyResult=await makeReport({type:'weekly',date:thu,start:'',end:'',hrs:totalHrs,km:totalKm.toString(),dateFmt:period,aiText,incType:''});
-    androidDownload(weeklyResult.dataUri,weeklyResult.fileName);
-    saveRep(thu,{type:'weekly',label:'Weekly Report \u2014 '+period,time:'',hrs:totalHrs,km:totalKm.toString(),fileName:weeklyResult.fileName,notes:aiText});
-    // Weekly invoice PDF
-    const allDays=[];
-    for(let i=0;i<7;i++){
-      const d=new Date(fri+'T12:00:00');d.setDate(d.getDate()+i);
-      const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-      const shift=shifts.find(s=>s.date===ds);
-      const timeParts=shift?.time?shift.time.split('-'):['09:00','15:00'];
-      allDays.push({date:ds,active:!!shift,start:timeParts[0]||'09:00',end:timeParts[1]||'15:00',km:parseFloat(shift?.km)||0});
-    }
-    const invNum='INV-'+thu.replace(/-/g,'').slice(2);
-    const invDate=new Date(thu+'T12:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
-    const invoiceResult=await makeWeeklyInvoice({invNum,invDate,period,days:allDays,lineItem:'09',bankName:'Achieve Together Care',bsb:'067-873',accNum:'207-436-73',abn:'68 493 366 184'});
-    androidDownload(invoiceResult.dataUri,invoiceResult.fileName);
-    saveRep(thu,{type:'invoice',label:'Weekly Invoice \u2014 '+period,time:'',hrs:totalHrs,km:totalKm.toString(),fileName:invoiceResult.fileName});
-    updateStats();renderCal();
-    document.getElementById('auto-weekly-overlay').remove();
-    // Success popup
-    const s=document.createElement('div');
-    s.style.cssText='position:fixed;inset:0;z-index:20001;background:rgba(4,10,22,0.92);display:flex;align-items:center;justify-content:center;';
-    s.innerHTML='<div style="background:linear-gradient(160deg,#13203d,#080f1e);border:1px solid rgba(196,154,30,0.3);border-radius:24px;padding:32px 24px;text-align:center;max-width:320px;margin:20px;"><div style="font-size:48px;margin-bottom:12px;">\u2705</div><div style="font-family:\'Fraunces\',serif;font-size:22px;color:#f0ece3;margin-bottom:8px;">Week Complete!</div><div style="font-size:13px;color:#a8a090;margin-bottom:16px;">'+period+'<br>'+totalHrs+' hrs \u00b7 '+totalKm+' km \u00b7 '+shifts.length+' shifts</div><div style="font-size:12px;color:#34d48a;margin-bottom:20px;">\ud83d\udcc6 Weekly Report downloaded<br>\ud83e\uddfe Invoice downloaded</div><button onclick="this.closest(\'div[style]\').remove()" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#c49a1e,#e8bc3a);color:#080f1e;font-family:\'Fraunces\',serif;font-size:15px;font-weight:700;cursor:pointer;">Done</button></div>';
-    document.body.appendChild(s);
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const json=await res.json();
+    if(json.error){throw new Error(json.error.message);}
+    const text=json.content[0].text;
+    generatedReport={text,data};
+    hideLoading();
+    showReport(text,data);
+    enableButtons();
+    toast('Report generated successfully','success');
   }catch(err){
-    const o=document.getElementById('auto-weekly-overlay');if(o)o.remove();
-    alert('Error: '+err.message);
+    hideLoading();
+    toast('Error: '+err.message,'error');
   }
 }
-function checkFridayTrigger(){
-  const now=new Date();
-  if(now.getDay()===5&&now.getHours()===16&&now.getMinutes()<5){
-    const lastRun=localStorage.getItem('atc_last_weekly_run')||'';
-    const tomlday=todayStr();
-    if(lastRun!==today){
-      localStorage.setItem('atc_last_weekly_run',today);
-      setTimeout(()=>autoGenerateWeekly(),2000);
-    }
-  }
+
+function collectFormData(){
+  const date=document.getElementById('shiftDate').value;
+  const start=document.getElementById('startTime').value;
+  const end=document.getElementById('endTime').value;
+  const hours=((toMin(end)-toMin(start))/60).toFixed(2);
+  return {
+    date,start,end,hours,
+    worker:document.getElementById('workerName').value,
+    supportType:document.getElementById('supportType').value,
+    location:document.getElementById('location').value||'Not specified',
+    participant:document.getElementById('participantName').value,
+    ndis:document.getElementById('ndisNum').value,
+    coordinator:document.getElementById('coordinator').value,
+    activities:document.getElementById('activities').value,
+    mood:selectedMood||'neutral',
+    goals:document.getElementById('goals').value,
+    notes:document.getElementById('notes').value,
+    transport:document.getElementById('transportUsed').value==='yes',
+    km:document.getElementById('kilometres').value||'0',
+    vehicle:document.getElementById('vehicle').value,
+    incident:document.getElementById('incidentOccurred').value==='yes',
+    incidentType:document.getElementById('incidentType').value,
+    incidentDesc:document.getElementById('incidentDesc').value,
+  };
 }
-function scheduleWeeklyCheck(){checkFridayTrigger();setInterval(checkFridayTrigger,60000);}
 
-window.onload=function(){
-  const t=todayStr();
-  ['f-date','si-sdate','si-date','wi-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=t;});
-  updateStats();renderCal();renderForm();
-  if(apiKey)document.getElementById('api-status').textContent='✅ API Key saved';
-  scheduleWeeklyCheck();
-  // Touch swipe for calendar
-  let swipeStartX=0;
-  const calWrap=document.getElementById('cal-wrap');
-  if(calWrap){
-    calWrap.addEventListener('touchstart',e=>{swipeStartX=e.touches[0].clientX;},{passive:true});
-    calWrap.addEventListener('touchend',e=>{
-      const diff=swipeStartX-e.changedTouches[0].clientX;
-      if(Math.abs(diff)>50){if(diff>0)calNext();else calPrev();}
-    },{passive:true});
-  }
-};
+function buildPrompt(d){
+  const dateStr=new Date(d.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const moodMap={positive:'positive and engaged throughout the shift',neutral:'settled and stable',anxious:'somewhat anxious but manageable with support',agitated:'agitated and required de-escalation at times',withdrawn:'withdrawn and disengaged for much of the shift',distressed:'distressed and required significant emotional support'};
+  const moodDesc=moodMap[d.mood]||'stable';
 
+  return `You are a professional NDIS support worker writing a daily shift report for an Australian disability service provider called Achieve Together Care (ATC).
 
-</script>
-</body>
-  </html>
+Write a professional shift report that sounds completely human and natural \u2014 not like it was written by AI. Write in first person from the support worker's perspective. Use natural, warm, professional language. Do NOT add any recommendations, suggestions, or "next steps". Do NOT use bullet points or headers in the narrative sections. Just describe what happened clearly and honestly.
+
+SHIFT INFORMATION:
+- Date: ${dateStr}
+- Time: ${d.start} \u2013 ${d.end} (${d.hours} hours)
+- Support Worker: ${d.worker}
+- Participant: ${d.participant} (NDIS: ${d.ndis})
+- Support Coordinator: ${d.coordinator}
+- Support Type: ${d.supportType}
+- Location: ${d.location}
+- Participant mood: ${moodDesc}
+
+ACTIVITIES/NOTES FROM WORKER:
+${d.activities||'No specific notes provided.'}
+
+GOALS ADDRESSED:
+${d.goals||'General daily support.'}
+
+ADDITIONAL NOTES:
+${d.notes||'None.'}
+
+TRANSPORT: ${d.transport?
