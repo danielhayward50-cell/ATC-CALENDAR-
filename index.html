@@ -2,163 +2,273 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>ATC Shift Report Generator</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Cabinet+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>ATC Shift Reports</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-:root{
-  --bl:#2563eb;--bld:#0a1830;
-  --gold:#c9a84c;--gold2:#e4c06e;
-  --bg:#070c18;--s1:#0d1525;--s2:#131f35;--s3:#1e2d45;
-  --bd:#1c3356;--bdl:#2a4a70;
-  --tx:#e2eaf5;--mu:#5a7a9a;--mu2:#8aaccc;
-  --green:#22c55e;--red:#ef4444;
-}
 *{margin:0;padding:0;box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{background:var(--bg);color:var(--tx);font-family:'Cabinet Grotesk',system-ui,sans-serif;min-height:100vh;background-image:radial-gradient(ellipse 80% 50% at 50% -5%,rgba(37,99,235,.14) 0%,transparent 65%);}
-header{background:linear-gradient(180deg,rgba(10,24,48,.97),rgba(7,12,24,.97));border-bottom:1px solid var(--bd);padding:0 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:300;backdrop-filter:blur(20px);height:56px;}
-.logo{width:38px;height:38px;flex-shrink:0;background:linear-gradient(135deg,var(--bl),#1d40af);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;font-size:14px;color:#fff;box-shadow:0 3px 14px rgba(37,99,235,.4);}
-.hdr-text h1{font-size:.88rem;font-weight:800;letter-spacing:-.01em;}
-.hdr-text p{font-size:.6rem;color:var(--mu2);margin-top:1px;}
-.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
-.api-btn{display:flex;align-items:center;gap:7px;cursor:pointer;background:var(--s2);border:1.5px solid var(--bd);border-radius:22px;padding:5px 13px;transition:all .2s;user-select:none;}
-.api-btn:hover{border-color:var(--bl);}
-.api-btn.ready{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.07);}
-.api-dot{width:7px;height:7px;border-radius:50%;background:#374151;transition:all .3s;flex-shrink:0;}
-.api-dot.on{background:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.2);}
-.api-lbl{font-size:.68rem;font-weight:700;color:var(--mu2);letter-spacing:.03em;transition:color .2s;}
-.api-btn.ready .api-lbl{color:var(--green);}
-#apiPanel{display:none;position:fixed;top:56px;left:0;right:0;z-index:280;background:linear-gradient(180deg,#0d1f40,#0a1628);border-bottom:1px solid var(--bl);padding:12px 16px;}
-#apiPanel.open{display:block;}
-.api-row{max-width:800px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.api-row label{font-size:.65rem;font-weight:700;color:var(--mu2);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;}
-.api-row input{flex:1;min-width:180px;background:#070e1c;border:1.5px solid var(--bd);border-radius:8px;padding:8px 12px;color:var(--tx);font-size:.85rem;font-family:'Cabinet Grotesk',sans-serif;outline:none;transition:border-color .2s;}
-.api-row input:focus{border-color:var(--bl);}
-.api-save{background:var(--bl);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.78rem;font-weight:800;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;transition:background .15s;white-space:nowrap;}
-.api-save:hover{background:#1d40af;}
-.api-hint{font-size:.62rem;color:var(--mu);white-space:nowrap;}
-.wrap{max-width:820px;margin:0 auto;padding:18px 12px 80px;}
+:root{
+  --ink:#050d1f;--ink2:#080f24;--ink3:#0c1630;--ink4:#11203d;
+  --bl:#1a50d4;--bl2:#2563eb;--bl3:#60a5fa;
+  --gld:#c9922a;--gld2:#e8a830;--gld3:#f5c842;
+  --tx:#d8e8ff;--mu:#5a7499;--mu2:#8aaccc;
+  --grn:#16a34a;--grn2:#4ade80;--red:#dc2626;
+  --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.13);
+  --pur:#7c3aed;
+}
+html{background:var(--ink);scroll-behavior:smooth;}
+body{background:var(--ink);color:var(--tx);font-family:"DM Sans",system-ui,sans-serif;min-height:100vh;
+  background-image:radial-gradient(ellipse 130% 55% at 50% -10%,rgba(26,80,212,.22) 0%,transparent 65%),radial-gradient(ellipse 45% 35% at 88% 12%,rgba(201,146,42,.08) 0%,transparent 55%);}
+
+/* HEADER */
+header{height:60px;padding:0 16px;display:flex;align-items:center;gap:13px;position:sticky;top:0;z-index:400;background:rgba(5,13,31,.94);border-bottom:1px solid var(--bd);backdrop-filter:blur(24px);}
+.logo{width:40px;height:40px;border-radius:11px;flex-shrink:0;background:linear-gradient(135deg,#1a50d4,#0e2a80);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-family:"Fraunces",serif;font-weight:800;font-size:15px;color:#fff;box-shadow:0 4px 22px rgba(26,80,212,.6),inset 0 1px 0 rgba(255,255,255,.15);}
+.htx h1{font-size:.88rem;font-weight:700;color:#fff;letter-spacing:-.01em;}
+.htx p{font-size:.58rem;color:var(--mu2);margin-top:1px;}
+.hr{margin-left:auto;display:flex;align-items:center;gap:7px;}
+.kpill{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);border-radius:24px;padding:5px 13px;cursor:pointer;transition:all .2s;user-select:none;}
+.kpill.on{border-color:rgba(22,163,74,.5);background:rgba(22,163,74,.07);}
+.kdot{width:7px;height:7px;border-radius:50%;background:#2d3a52;flex-shrink:0;transition:all .3s;}
+.kdot.on{background:var(--grn);box-shadow:0 0 0 3px rgba(22,163,74,.22);}
+.klbl{font-size:.66rem;font-weight:600;color:var(--mu2);letter-spacing:.03em;}
+.kpill.on .klbl{color:var(--grn2);}
+
+/* API PANEL */
+#apiP{display:none;position:fixed;top:60px;left:0;right:0;z-index:390;background:rgba(5,10,25,.97);border-bottom:1px solid rgba(26,80,212,.3);padding:11px 16px;backdrop-filter:blur(20px);}
+#apiP.open{display:block;}
+.apir{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.apir label{font-size:.6rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;}
+.apir input{flex:1;min-width:180px;background:rgba(255,255,255,.05);border:1px solid var(--bd2);border-radius:8px;padding:8px 12px;color:#fff;font-size:.83rem;font-family:"DM Sans",sans-serif;outline:none;}
+.apir input::placeholder{color:var(--mu);}
+.apir input:focus{border-color:var(--bl2);}
+.apsv{background:var(--bl2);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif;}
+.aphi{font-size:.58rem;color:var(--mu);}
+
+/* LAYOUT */
+.wrap{max-width:800px;margin:0 auto;padding:18px 12px 90px;}
+
 /* STATS BAR */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
-.stat{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;text-align:center;}
-.sv{font-size:1.1rem;font-weight:800;color:var(--bl);font-family:'Fraunces',serif;line-height:1.1;}
-.sl{font-size:.58rem;text-transform:uppercase;letter-spacing:.09em;color:var(--mu);margin-top:3px;}
+.sbar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;}
+.sb{background:linear-gradient(150deg,var(--ink4),var(--ink3));border:1px solid var(--bd);border-radius:14px;padding:12px 10px;text-align:center;transition:border-color .2s,transform .15s;}
+.sb:hover{border-color:rgba(96,165,250,.3);transform:translateY(-1px);}
+.sbv{font-size:1.1rem;font-weight:800;color:var(--bl3);font-family:"Fraunces",serif;line-height:1;}
+.sbl{font-size:.54rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-top:4px;}
+/* pay stat gets gold */
+.sb.pay .sbv{color:var(--gld2);}
+
+/* PAY BANNER */
+.pay-banner{
+  background:linear-gradient(135deg,rgba(201,146,42,.12),rgba(245,200,66,.06));
+  border:1px solid rgba(201,146,42,.3);
+  border-radius:14px;margin-bottom:14px;padding:14px 18px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.pay-big{font-family:"Fraunces",serif;font-size:2rem;font-weight:800;color:var(--gld3);line-height:1;}
+.pay-info{flex:1;}
+.pay-lbl{font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;color:var(--gld);margin-bottom:4px;}
+.pay-breakdown{font-size:.78rem;color:var(--mu2);}
+.pay-total-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px;}
+.pay-chip{background:rgba(201,146,42,.15);border:1px solid rgba(201,146,42,.25);border-radius:8px;padding:4px 10px;font-size:.7rem;color:var(--gld2);font-weight:600;}
+
 /* CARDS */
-.card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;margin-bottom:10px;overflow:hidden;}
-.card-hd{display:flex;align-items:center;gap:9px;padding:11px 16px;border-bottom:1px solid var(--bd);background:linear-gradient(90deg,rgba(37,99,235,.09),transparent);}
-.card-num{width:20px;height:20px;border-radius:50%;background:rgba(37,99,235,.2);border:1px solid rgba(37,99,235,.35);color:var(--bl);font-size:.63rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.card-title{font-size:.76rem;font-weight:800;letter-spacing:.02em;color:var(--tx);}
-.card-hint{font-size:.64rem;color:var(--mu);margin-left:auto;}
-.card-body{padding:14px 16px;}
-/* GRIDS — force 3col on mobile for date/time */
+.card{background:linear-gradient(160deg,var(--ink4),var(--ink3));border:1px solid var(--bd);border-radius:16px;margin-bottom:10px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.3);}
+.chd{display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid var(--bd);background:linear-gradient(90deg,rgba(26,80,212,.1),transparent);}
+.cnum{width:22px;height:22px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,var(--bl),#0f2f8a);font-size:.64rem;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(26,80,212,.4);}
+.ctitle{font-size:.77rem;font-weight:700;color:#fff;}
+.chint{font-size:.62rem;color:var(--mu);margin-left:auto;font-style:italic;}
+.cbody{padding:14px 16px;}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.g2b{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .full{grid-column:1/-1;}
-.fld{display:flex;flex-direction:column;gap:4px;}
-.fld label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);}
-input,select,textarea{background:var(--s2);border:1.5px solid var(--bd);border-radius:9px;padding:9px 11px;color:var(--tx);font-size:.85rem;font-family:'Cabinet Grotesk',sans-serif;outline:none;width:100%;transition:border-color .2s,background .2s;}
-input:focus,select:focus,textarea:focus{border-color:var(--bl);background:var(--s3);}
-textarea{resize:vertical;line-height:1.6;}
-select option{background:var(--s2);}
+.fld{display:flex;flex-direction:column;gap:5px;}
+.fld label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--mu);}
+input,select,textarea{background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;color:var(--tx);font-size:.85rem;font-family:"DM Sans",sans-serif;outline:none;width:100%;transition:border-color .15s,background .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--bl2);background:rgba(37,99,235,.06);}
+textarea{resize:vertical;line-height:1.65;}
+select option{background:#0c1630;}
 input[type=time],input[type=date]{color-scheme:dark;}
-/* MOOD CHIPS */
-.mood-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
-.mc{padding:5px 12px;border-radius:20px;border:1.5px solid var(--bd);font-size:.72rem;font-weight:700;cursor:pointer;background:transparent;color:var(--mu2);transition:all .15s;font-family:'Cabinet Grotesk',sans-serif;line-height:1.4;}
-.mc:hover{border-color:var(--bdl);}
-.mc.on{color:#fff!important;border-color:transparent!important;}
-.mc[data-m=positive].on{background:#16a34a;}
-.mc[data-m=neutral].on{background:#2563eb;}
-.mc[data-m=anxious].on{background:#d97706;}
-.mc[data-m=agitated].on{background:#dc2626;}
-.mc[data-m=withdrawn].on{background:#7c3aed;}
-.mc[data-m=distressed].on{background:#9f1239;}
-/* ACTION CARD */
-.action-card{background:linear-gradient(135deg,#0d1f40,#070c18);border:1px solid rgba(37,99,235,.4);border-radius:14px;padding:16px;margin-bottom:10px;}
-.action-hd{font-size:.73rem;font-weight:800;color:var(--gold2);letter-spacing:.04em;padding-bottom:12px;border-bottom:1px solid rgba(37,99,235,.2);margin-bottom:14px;}
-.btn-gen{width:100%;padding:14px;border-radius:11px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--bl),#1d40af);color:#fff;font-family:'Cabinet Grotesk',sans-serif;font-size:.92rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-bottom:10px;}
-.btn-gen:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(37,99,235,.45);}
-.save-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;}
-.btn{padding:11px 12px;border-radius:10px;border:none;cursor:pointer;font-family:'Cabinet Grotesk',sans-serif;font-size:.78rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .18s;text-align:center;}
-.btn:disabled{opacity:.3;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
-.btn-ghost{background:var(--s2);color:var(--tx);border:1.5px solid var(--bd);}
-.btn-ghost:hover:not(:disabled){border-color:var(--bl);color:var(--bl);}
-.btn-cal{background:linear-gradient(135deg,#16a34a,#166534);color:#fff;}
-.btn-cal:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px rgba(22,163,74,.4);}
-.btn-drv{background:linear-gradient(135deg,#0369a1,#075985);color:#fff;}
-.btn-drv:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px rgba(3,105,161,.4);}
-.btn-both{width:100%;padding:13px;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--gold),#a36d20);color:#000;font-family:'Cabinet Grotesk',sans-serif;font-size:.88rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .18s;}
-.btn-both:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(201,168,76,.4);}
-.btn-both:disabled{opacity:.3;cursor:not-allowed;transform:none!important;}
+input::placeholder,textarea::placeholder{color:var(--mu);}
+input[type=number]{-moz-appearance:textfield;}
+
+/* MOOD */
+.mood-wrap{display:flex;gap:6px;flex-wrap:wrap;padding-top:2px;}
+.mc{padding:6px 13px;border-radius:24px;border:1.5px solid rgba(255,255,255,.1);font-size:.71rem;font-weight:600;cursor:pointer;background:rgba(255,255,255,.03);color:var(--mu2);transition:all .15s;font-family:"DM Sans",sans-serif;user-select:none;}
+.mc:hover{border-color:rgba(255,255,255,.2);}
+.mc.on{color:#fff;border-color:transparent;transform:scale(1.05);}
+.mc[data-m=positive].on{background:linear-gradient(135deg,#16a34a,#15803d);}
+.mc[data-m=neutral].on{background:linear-gradient(135deg,#2563eb,#1d40af);}
+.mc[data-m=anxious].on{background:linear-gradient(135deg,#d97706,#b45309);}
+.mc[data-m=agitated].on{background:linear-gradient(135deg,#dc2626,#b91c1c);}
+.mc[data-m=withdrawn].on{background:linear-gradient(135deg,#7c3aed,#6d28d9);}
+.mc[data-m=distressed].on{background:linear-gradient(135deg,#9f1239,#881337);}
+
+/* GENERATE CARD */
+.gcard{background:linear-gradient(160deg,#091840,#050d1f);border:1px solid rgba(26,80,212,.35);border-radius:16px;padding:18px;margin-bottom:10px;box-shadow:0 8px 40px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);}
+.gcard-lbl{font-size:.68rem;font-weight:700;color:var(--gld2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.gcard-lbl::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(201,146,42,.3),transparent);}
+.btn-gen{width:100%;padding:15px;border-radius:12px;border:none;cursor:pointer;background:linear-gradient(135deg,#1a50d4,#0e2a80);color:#fff;font-family:"DM Sans",sans-serif;font-size:.92rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .2s;margin-bottom:10px;box-shadow:0 6px 24px rgba(26,80,212,.4);letter-spacing:.01em;}
+.btn-gen:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(26,80,212,.55);}
+.sgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px;}
+.btn{padding:11px 12px;border-radius:10px;border:none;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.77rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .18s;}
+.btn:disabled{opacity:.25;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+.btn-ghost{background:rgba(255,255,255,.05);color:var(--tx);border:1px solid var(--bd2);}
+.btn-ghost:hover:not(:disabled){background:rgba(255,255,255,.09);}
+.btn-grn{background:linear-gradient(135deg,#16a34a,#166534);color:#fff;}
+.btn-grn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px rgba(22,163,74,.4);}
+.btn-sky{background:linear-gradient(135deg,#0369a1,#075985);color:#fff;}
+.btn-sky:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 18px rgba(3,105,161,.4);}
+.btn-both{width:100%;padding:13px;border-radius:11px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--gld),#a36d20);color:#0a0a0a;font-family:"DM Sans",sans-serif;font-size:.88rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .18s;}
+.btn-both:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 28px rgba(201,146,42,.45);}
+.btn-both:disabled{opacity:.25;cursor:not-allowed;transform:none!important;}
+
 /* MODALS */
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);padding:12px;}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(10px);padding:12px;}
 .ov.open{display:flex;}
-.modal{background:var(--s1);border:1px solid var(--bd);border-radius:16px;width:min(800px,100%);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.7);}
-.modal-sm{max-width:460px!important;}
-.mhd{padding:14px 20px;border-bottom:1px solid var(--bd);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#0d1f40,var(--bg));}
-.mhd h3{font-size:.88rem;font-weight:800;font-family:'Fraunces',serif;}
-.mx{width:28px;height:28px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--tx);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:all .15s;}
-.mx:hover{background:#ef444418;border-color:var(--red);color:var(--red);}
+.modal{background:var(--ink3);border:1px solid var(--bd2);border-radius:18px;width:min(820px,100%);max-height:93vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 50px 120px rgba(0,0,0,.8);}
+#pdfFrame{min-height:420px;}
+@media(max-width:560px){#pdfFrame{min-height:55vh;}}
+.modal-sm{max-width:480px!important;}
+.mhd{padding:14px 20px;border-bottom:1px solid var(--bd);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(26,80,212,.15),transparent);}
+.mhd h3{font-size:.88rem;font-weight:700;font-family:"Fraunces",serif;color:#fff;}
+.mx{width:28px;height:28px;border-radius:7px;border:1px solid var(--bd);background:rgba(255,255,255,.05);color:var(--tx);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;transition:all .15s;}
+.mx:hover{background:rgba(220,38,38,.2);border-color:var(--red);color:var(--red);}
 .mbody{padding:18px 20px;overflow-y:auto;flex:1;}
-.mft{padding:12px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-wrap:wrap;background:var(--s1);flex-shrink:0;}
+.mft{padding:12px 20px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-wrap:wrap;background:var(--ink3);flex-shrink:0;}
 .mft .btn{flex:1;min-width:90px;}
-/* REPORT PREVIEW */
-#rptBox{background:#08111e;border-radius:12px;border:1px solid #1e3a5f;overflow:hidden;}
-.rpt-hd{background:linear-gradient(135deg,#0b1a38,#060f20);padding:14px 20px;border-bottom:1px solid rgba(201,168,76,.3);display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.rpt-org{font-family:'Fraunces',serif;font-size:1rem;font-weight:700;color:var(--gold2);}
-.rpt-org-sub{font-size:.64rem;color:var(--mu);margin-top:2px;}
-.rpt-hd-badge{background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);border-radius:8px;padding:6px 11px;text-align:right;flex-shrink:0;}
-.rpt-hd-badge .bd{font-size:.72rem;font-weight:800;color:var(--bl);}
-.rpt-hd-badge .bt{font-size:.62rem;color:var(--mu2);margin-top:1px;}
-.rpt-strip{display:flex;border-bottom:1px solid var(--bd);background:rgba(37,99,235,.04);flex-wrap:wrap;}
-.rs{padding:7px 14px;border-right:1px solid var(--bd);flex:1;min-width:0;}
-.rs:last-child{border-right:none;}
-.rs-k{font-size:.56rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--bl);margin-bottom:2px;}
-.rs-v{font-size:.76rem;color:var(--tx);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rpt-body{padding:16px 20px 12px;}
-.rpt-sec{margin-bottom:13px;}
-.rpt-sec-lbl{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#2563eb;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #1e3a5f;}
-.rpt-sec ul{padding-left:14px;list-style:disc;}
-.rpt-sec li{margin-bottom:5px;line-height:1.6;color:#c8d8ec;font-size:.84rem;}
-.rpt-foot{padding:7px 20px;background:rgba(37,99,235,.04);border-top:1px solid var(--bd);font-size:.6rem;color:var(--mu);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;}
+
+/* REPORT PREVIEW — polished */
+.rpt-wrap{border-radius:12px;overflow:hidden;border:1px solid rgba(26,80,212,.3);background:#06102a;}
+.rpt-banner{background:linear-gradient(135deg,#091840,#04091a);padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:2px solid rgba(201,146,42,.35);}
+.rpt-org-name{font-family:"Fraunces",serif;font-size:1.05rem;font-weight:800;color:var(--gld2);letter-spacing:.01em;}
+.rpt-org-sub{font-size:.62rem;color:var(--mu2);margin-top:3px;}
+.rpt-who{text-align:right;}
+.rpt-who-name{font-size:.88rem;font-weight:700;color:#fff;}
+.rpt-who-ndis{font-size:.62rem;color:var(--bl3);margin-top:2px;}
+.rpt-meta{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--bd);background:rgba(26,80,212,.04);}
+.rm{padding:8px 14px;border-right:1px solid var(--bd);}
+.rm:last-child{border-right:none;}
+.rm-k{font-size:.54rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--bl3);margin-bottom:2px;}
+.rm-v{font-size:.78rem;font-weight:600;color:var(--tx);}
+.rpt-sections{padding:16px 20px 12px;}
+.rsec{margin-bottom:14px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.06);}
+.rsec-hd{padding:8px 14px;display:flex;align-items:center;gap:8px;}
+.rsec-hd.sum{background:linear-gradient(90deg,#1a50d4,#1d40af);}
+.rsec-hd.act{background:linear-gradient(90deg,#0e6e3d,#166534);}
+.rsec-hd.eng{background:linear-gradient(90deg,#5b2791,#6d28d9);}
+.rsec-hd.gls{background:linear-gradient(90deg,#b45309,#92400e);}
+.rsec-hd-lbl{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.9);}
+.rsec-hd-ct{font-size:.58rem;color:rgba(255,255,255,.4);margin-left:auto;}
+.rsec-body{background:#040c1e;padding:8px 14px 10px;}
+.rsec-body li{list-style:none;padding:5px 0 5px 16px;position:relative;border-bottom:1px solid rgba(255,255,255,.04);font-size:.82rem;line-height:1.65;color:#b8d0f0;}
+.rsec-body li:last-child{border-bottom:none;}
+.rsec-body li::before{content:"▸";position:absolute;left:2px;color:var(--gld);font-size:.75rem;top:6px;}
+.rpt-foot{padding:7px 20px;background:rgba(26,80,212,.04);border-top:1px solid var(--bd);font-size:.59rem;color:var(--mu);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;}
+
 /* CAL PREVIEW */
-.cal-prev{background:var(--s2);border:1px solid rgba(34,197,94,.25);border-radius:11px;padding:14px;margin-bottom:13px;}
-.cal-prev h4{color:var(--green);font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
-.cr{display:flex;justify-content:space-between;font-size:.81rem;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.cal-box{background:rgba(255,255,255,.03);border:1px solid rgba(22,163,74,.2);border-radius:11px;padding:14px;margin-bottom:13px;}
+.cal-box h4{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--grn2);margin-bottom:10px;}
+.cr{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.8rem;}
 .cr:last-child{border-bottom:none;}
 .cr .k{color:var(--mu2);}
-.cr .v{color:var(--tx);font-weight:700;text-align:right;max-width:58%;}
-/* DRIVE STATUS */
-.drv-status{background:var(--s2);border:1px solid var(--bdl);border-radius:10px;padding:13px;margin-bottom:10px;display:none;}
-.drv-status.show{display:block;}
-.drv-row{display:flex;align-items:center;gap:8px;font-size:.82rem;}
-.drv-icon{font-size:1.1rem;}
+.cr .v{font-weight:600;color:var(--tx);text-align:right;max-width:60%;}
+
+/* EARNINGS TRACKER */
+.earn-card{background:linear-gradient(135deg,rgba(201,146,42,.1),rgba(245,200,66,.04));border:1px solid rgba(201,146,42,.25);border-radius:16px;padding:16px;margin-bottom:10px;}
+.earn-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.earn-title{font-size:.72rem;font-weight:700;color:var(--gld2);text-transform:uppercase;letter-spacing:.1em;}
+.earn-reset{font-size:.63rem;color:var(--mu);cursor:pointer;text-decoration:underline;background:none;border:none;font-family:"DM Sans",sans-serif;}
+.earn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.earn-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 12px;text-align:center;}
+.earn-stat-v{font-size:1rem;font-weight:800;color:var(--gld3);font-family:"Fraunces",serif;}
+.earn-stat-l{font-size:.55rem;text-transform:uppercase;letter-spacing:.09em;color:var(--mu);margin-top:3px;}
+.earn-history{max-height:160px;overflow-y:auto;}
+.earn-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.76rem;}
+.earn-row:last-child{border-bottom:none;}
+.earn-row-d{color:var(--mu2);}
+.earn-row-p{color:var(--gld2);font-weight:700;}
+.earn-empty{text-align:center;color:var(--mu);font-size:.75rem;padding:12px 0;}
+
+/* DRIVE SYNC */
+.drive-bar{background:linear-gradient(135deg,rgba(3,105,161,.1),rgba(7,89,133,.06));border:1px solid rgba(3,105,161,.3);border-radius:14px;padding:13px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.drive-bar.authed{border-color:rgba(22,163,74,.35);background:linear-gradient(135deg,rgba(22,163,74,.08),rgba(16,103,58,.05));}
+.drive-icon{width:36px;height:36px;flex-shrink:0;border-radius:9px;background:linear-gradient(135deg,#0369a1,#075985);display:flex;align-items:center;justify-content:center;font-size:16px;}
+.drive-info{flex:1;min-width:0;}
+.drive-title{font-size:.74rem;font-weight:700;color:#fff;margin-bottom:2px;}
+.drive-sub{font-size:.63rem;color:var(--mu2);}
+.drive-sub.ok{color:var(--grn2);}
+.drive-sub.err{color:#fca5a5;}
+.btn-drive-connect{background:linear-gradient(135deg,#0369a1,#075985);color:#fff;border:none;border-radius:9px;padding:8px 14px;font-size:.73rem;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif;white-space:nowrap;transition:all .18s;display:flex;align-items:center;gap:6px;}
+.btn-drive-connect:hover{transform:translateY(-1px);box-shadow:0 5px 15px rgba(3,105,161,.4);}
+.btn-drive-connect.authed{background:linear-gradient(135deg,#16a34a,#166534);}
+.btn-drive-upload{background:linear-gradient(135deg,#0369a1,#075985);color:#fff;border:none;border-radius:9px;padding:8px 14px;font-size:.73rem;font-weight:700;cursor:pointer;font-family:"DM Sans",sans-serif;white-space:nowrap;transition:all .18s;display:flex;align-items:center;gap:6px;}
+.btn-drive-upload:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 15px rgba(3,105,161,.4);}
+.btn-drive-upload:disabled{opacity:.35;cursor:not-allowed;}
+.drive-file-link{font-size:.68rem;color:var(--bl3);text-decoration:underline;cursor:pointer;margin-top:3px;display:block;}
+.drive-spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:sp .6s linear infinite;display:inline-block;}
+
 /* TOAST */
-.toast{position:fixed;bottom:20px;right:16px;z-index:9999;padding:10px 16px;border-radius:10px;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:7px;transform:translateY(50px);opacity:0;transition:all .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;box-shadow:0 8px 28px rgba(0,0,0,.5);max-width:320px;font-family:'Cabinet Grotesk',sans-serif;}
+.toast{position:fixed;bottom:20px;right:14px;z-index:9999;padding:10px 16px;border-radius:11px;font-size:.79rem;font-weight:600;display:flex;align-items:center;gap:7px;transform:translateY(50px);opacity:0;transition:all .28s cubic-bezier(.34,1.56,.64,1);pointer-events:none;box-shadow:0 10px 32px rgba(0,0,0,.6);max-width:310px;font-family:"DM Sans",sans-serif;border:1px solid rgba(255,255,255,.08);}
 .toast.show{transform:translateY(0);opacity:1;}
-.toast.success{background:#166534;color:#fff;border:1px solid var(--green);}
-.toast.error{background:#7f1d1d;color:#fff;border:1px solid var(--red);}
-.toast.info{background:#1e3a8a;color:#fff;border:1px solid var(--bl);}
+.toast.success{background:#0f3d20;color:#4ade80;}
+.toast.error{background:#3d0f0f;color:#fca5a5;}
+.toast.info{background:#0f1d3d;color:#93c5fd;}
+
 /* LOADING */
-#ldg{position:fixed;inset:0;background:rgba(7,12,24,.94);z-index:1000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+#ldg{position:fixed;inset:0;background:rgba(5,13,31,.95);z-index:1000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
 #ldg.on{display:flex;}
-.spin{width:38px;height:38px;border:3px solid rgba(37,99,235,.15);border-top-color:var(--bl);border-radius:50%;animation:sp .72s linear infinite;}
+.spin{width:40px;height:40px;border:3px solid rgba(26,80,212,.15);border-top-color:#3b82f6;border-radius:50%;animation:sp .7s linear infinite;}
 @keyframes sp{to{transform:rotate(360deg);}}
-#ldgMsg{color:var(--mu2);font-size:.85rem;font-weight:600;}
+#ldgTx{color:var(--mu2);font-size:.84rem;font-weight:500;}
+#ldgSub{color:var(--mu);font-size:.71rem;margin-top:-8px;}
+
+/* TABS */
+.tabs{display:flex;gap:6px;margin-bottom:16px;background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:14px;padding:5px;}
+.tab{flex:1;padding:9px 12px;border:none;border-radius:10px;cursor:pointer;font-family:"DM Sans",sans-serif;font-size:.78rem;font-weight:700;color:var(--mu2);background:transparent;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.tab.active{background:linear-gradient(135deg,var(--bl),#0f2f8a);color:#fff;box-shadow:0 4px 14px rgba(26,80,212,.4);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* INVOICE TAB */
+.inv-card{background:linear-gradient(160deg,var(--ink4),var(--ink3));border:1px solid var(--bd);border-radius:16px;margin-bottom:10px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.3);}
+.inv-hd{display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid var(--bd);background:linear-gradient(90deg,rgba(201,146,42,.12),transparent);}
+.inv-hd-icon{width:22px;height:22px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,var(--gld),#a36d20);font-size:.7rem;font-weight:800;color:#000;display:flex;align-items:center;justify-content:center;}
+.inv-title{font-size:.77rem;font-weight:700;color:#fff;}
+.inv-hint{font-size:.62rem;color:var(--mu);margin-left:auto;font-style:italic;}
+.inv-body{padding:14px 16px;}
+.inv-line{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:8px 10px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid var(--bd);margin-bottom:6px;}
+.inv-line-desc{font-size:.8rem;color:var(--tx);}
+.inv-line-code{font-size:.66rem;color:var(--bl3);}
+.inv-line-amt{font-size:.82rem;font-weight:700;color:var(--gld2);text-align:right;}
+.inv-line-del{background:none;border:none;color:var(--mu);cursor:pointer;font-size:.85rem;padding:2px 5px;border-radius:4px;}
+.inv-line-del:hover{color:var(--red);}
+.inv-total-bar{background:linear-gradient(135deg,rgba(201,146,42,.12),rgba(245,200,66,.05));border:1px solid rgba(201,146,42,.3);border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+.inv-total-lbl{font-size:.72rem;font-weight:700;color:var(--gld);text-transform:uppercase;letter-spacing:.08em;}
+.inv-total-amt{font-size:1.4rem;font-weight:800;color:var(--gld3);font-family:"Fraunces",serif;}
+.inv-add-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:7px;margin-bottom:8px;}
+.btn-inv-add{background:linear-gradient(135deg,var(--gld),#a36d20);color:#000;border:none;border-radius:10px;padding:10px 14px;font-size:.76rem;font-weight:800;cursor:pointer;font-family:"DM Sans",sans-serif;white-space:nowrap;}
+.btn-inv-cal{width:100%;padding:13px;border-radius:11px;border:none;cursor:pointer;background:linear-gradient(135deg,#16a34a,#166534);color:#fff;font-family:"DM Sans",sans-serif;font-size:.9rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s;margin-top:8px;}
+.btn-inv-cal:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(22,163,74,.4);}
+.btn-inv-both{width:100%;padding:13px;border-radius:11px;border:none;cursor:pointer;background:linear-gradient(135deg,var(--gld),#a36d20);color:#000;font-family:"DM Sans",sans-serif;font-size:.9rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s;margin-top:8px;}
+.btn-inv-both:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(201,146,42,.4);}
+.inv-period-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.preset-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.pchip{padding:5px 11px;border-radius:20px;border:1.5px solid rgba(255,255,255,.1);font-size:.69rem;font-weight:600;cursor:pointer;background:rgba(255,255,255,.03);color:var(--mu2);transition:all .15s;font-family:"DM Sans",sans-serif;user-select:none;}
+.pchip:hover{border-color:rgba(201,146,42,.4);color:var(--gld2);}
+
 /* RESPONSIVE */
-@media(max-width:520px){
-  .stats{grid-template-columns:1fr 1fr;}
+@media(max-width:560px){
+  .sbar{grid-template-columns:1fr 1fr;}
   .g3{grid-template-columns:1fr 1fr 1fr;}
   .g2{grid-template-columns:1fr 1fr;}
-  .save-grid{grid-template-columns:1fr 1fr;}
-  .save-grid .btn:first-child{grid-column:1/-1;}
-  .rpt-hd{flex-direction:column;align-items:flex-start;}
-  .rpt-strip{flex-wrap:wrap;}
-  .rs{min-width:50%;border-bottom:1px solid var(--bd);}
-  input,select{font-size:.82rem;padding:8px 9px;}
-  .card-body{padding:12px;}
+  .sgrid{grid-template-columns:1fr 1fr;}
+  .sgrid .btn:first-child{grid-column:1/-1;}
+  .rpt-meta{grid-template-columns:1fr 1fr;}
+  .rpt-banner{flex-direction:column;gap:8px;}
+  .rpt-who{text-align:left;}
+  input,select{font-size:.82rem;}
+  .earn-grid{grid-template-columns:1fr 1fr;}
   .wrap{padding:14px 10px 80px;}
 }
 @media(max-width:360px){
@@ -168,28 +278,45 @@ input[type=time],input[type=date]{color-scheme:dark;}
 </style>
 </head>
 <body>
-<div id="ldg"><div class="spin"></div><p id="ldgMsg">Writing shift report...</p></div>
+
+<div id="ldg"><div class="spin"></div><p id="ldgTx">Writing shift report...</p><p id="ldgSub">Claude is reading your notes</p></div>
 <div class="toast" id="toast"></div>
 
-<div id="apiPanel">
-  <div class="api-row">
+<!-- API PANEL -->
+<div id="apiP">
+  <div class="apir">
     <label>API Key</label>
     <input type="password" id="apiInput" placeholder="sk-ant-api03-..." oninput="onApiType()">
-    <button class="api-save" onclick="saveKey()">Save</button>
-    <span class="api-hint">Stored locally &middot; console.anthropic.com</span>
+    <button class="apsv" onclick="saveKey()">Save</button>
+    <span class="aphi">Stored locally &middot; console.anthropic.com</span>
   </div>
 </div>
 
-<!-- REPORT MODAL -->
+<!-- PDF PREVIEW MODAL -->
 <div class="ov" id="rptModal">
-  <div class="modal">
-    <div class="mhd"><h3>&#128203; Report Preview</h3><button class="mx" onclick="closeOv('rptModal')">&#10005;</button></div>
-    <div class="mbody" id="rptBox"></div>
-    <div class="mft">
-      <button class="btn btn-ghost" onclick="closeOv('rptModal')">Close</button>
-      <button class="btn btn-drv" onclick="doDrive();closeOv('rptModal')">&#11015; PDF</button>
-      <button class="btn btn-cal" onclick="doCalendar();closeOv('rptModal')">&#128197; Calendar</button>
-      <button class="btn btn-both" style="flex:2;" onclick="doBoth();closeOv('rptModal')">&#9889; Both</button>
+  <div class="modal" style="width:min(860px,100%);max-height:96vh;">
+    <div class="mhd">
+      <h3>&#128196; PDF Preview</h3>
+      <div style="display:flex;gap:7px;align-items:center;">
+        <span id="pdfFnLabel" style="font-size:.62rem;color:var(--mu2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+        <button class="mx" onclick="closeOv('rptModal')">&#10005;</button>
+      </div>
+    </div>
+    <!-- PDF iframe preview -->
+    <div style="flex:1;overflow:hidden;background:#1a1a2e;position:relative;min-height:0;">
+      <iframe id="pdfFrame" style="width:100%;height:100%;border:none;display:block;" title="PDF Preview"></iframe>
+      <div id="pdfFallback" style="display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;padding:20px;text-align:center;">
+        <div style="font-size:2.5rem;">&#128196;</div>
+        <p style="font-size:.88rem;color:var(--tx);font-weight:600;">PDF Ready</p>
+        <p style="font-size:.76rem;color:var(--mu2);line-height:1.7;">Your browser can't preview PDFs inline.<br>Tap Download to save it.</p>
+      </div>
+    </div>
+    <div class="mft" style="flex-wrap:nowrap;gap:7px;">
+      <button class="btn btn-ghost" style="flex:0 0 auto;padding:10px 14px;" onclick="closeOv('rptModal')">&#8592; Back</button>
+      <button class="btn btn-sky" style="flex:1;" onclick="doDriveDirect()">&#11015; Download PDF</button>
+      <button class="btn btn-grn" style="flex:1;" onclick="doCalendar()">&#128197; Calendar</button>
+      <button class="btn btn-both" style="flex:1.5;" onclick="doBoth()">&#9889; Both</button>
+      <button class="btn" style="flex:1;background:linear-gradient(135deg,#0369a1,#075985);color:#fff;" id="modalDriveBtn" onclick="driveUploadNow()">&#9729; Drive</button>
     </div>
   </div>
 </div>
@@ -197,85 +324,77 @@ input[type=time],input[type=date]{color-scheme:dark;}
 <!-- CALENDAR MODAL -->
 <div class="ov" id="calModal">
   <div class="modal modal-sm">
-    <div class="mhd"><h3>&#128197; Google Calendar</h3><button class="mx" onclick="closeOv('calModal')">&#10005;</button></div>
+    <div class="mhd"><h3>&#128197; Add to Google Calendar</h3><button class="mx" onclick="closeOv('calModal')">&#10005;</button></div>
     <div class="mbody">
-      <div class="cal-prev">
+      <div class="cal-box">
         <h4>&#10003; Event Preview</h4>
         <div class="cr"><span class="k">Title</span><span class="v" id="ce-t"></span></div>
         <div class="cr"><span class="k">Date</span><span class="v" id="ce-d"></span></div>
         <div class="cr"><span class="k">Time</span><span class="v" id="ce-tm"></span></div>
         <div class="cr"><span class="k">Duration</span><span class="v" id="ce-du"></span></div>
+        <div class="cr"><span class="k">Earnings</span><span class="v" id="ce-pay" style="color:var(--gld2);"></span></div>
         <div class="cr"><span class="k">Worker</span><span class="v" id="ce-w"></span></div>
-        <div class="cr"><span class="k">NDIS#</span><span class="v" id="ce-n"></span></div>
+        <div class="cr"><span class="k">NDIS #</span><span class="v" id="ce-n"></span></div>
         <div class="cr"><span class="k">Coordinator</span><span class="v" id="ce-c"></span></div>
         <div class="cr"><span class="k">Plan Manager</span><span class="v">Plan Partners &#8212; ISCP</span></div>
       </div>
-      <p style="font-size:.76rem;color:var(--mu);line-height:1.65;">Google Calendar opens pre-filled. The full report text is in the event description. You may need to allow pop-ups.</p>
+      <p style="font-size:.74rem;color:var(--mu);line-height:1.7;">Opens Google Calendar pre-filled. Full report text is saved in the event description.</p>
     </div>
     <div class="mft">
       <button class="btn btn-ghost" onclick="closeOv('calModal')">Cancel</button>
-      <button class="btn btn-cal" style="flex:1;" onclick="confirmCal()">Open Google Calendar &#8594;</button>
+      <button class="btn btn-grn" style="flex:1;" onclick="confirmCal()">Open Google Calendar &#8594;</button>
     </div>
   </div>
 </div>
 
-<!-- DRIVE MODAL -->
-<div class="ov" id="driveModal">
-  <div class="modal modal-sm">
-    <div class="mhd"><h3>&#9729; Save to Google Drive</h3><button class="mx" onclick="closeOv('driveModal')">&#10005;</button></div>
-    <div class="mbody">
-      <div class="cal-prev" style="border-color:rgba(3,105,161,.4);">
-        <h4 style="color:#60a5fa;">&#128196; File Details</h4>
-        <div class="cr"><span class="k">Filename</span><span class="v" id="drv-fn" style="font-size:.7rem;"></span></div>
-        <div class="cr"><span class="k">Participant</span><span class="v" id="drv-pt"></span></div>
-        <div class="cr"><span class="k">Date</span><span class="v" id="drv-dt"></span></div>
-        <div class="cr"><span class="k">Type</span><span class="v">PDF Shift Report</span></div>
-        <div class="cr"><span class="k">Organisation</span><span class="v">Achieve Together Care</span></div>
-      </div>
-      <div class="drv-status" id="drvStatus">
-        <div class="drv-row"><span class="drv-icon" id="drvIcon">&#128260;</span><span id="drvMsg">Preparing...</span></div>
-      </div>
-      <p style="font-size:.76rem;color:var(--mu);line-height:1.65;">The PDF will be downloaded to your device first. Then tap <strong style="color:var(--tx);">Upload to Drive</strong> to open Google Drive in a new tab where you can upload it.</p>
-    </div>
-    <div class="mft">
-      <button class="btn btn-ghost" onclick="closeOv('driveModal')">Cancel</button>
-      <button class="btn btn-drv" id="btnDrvDownload" style="flex:1;" onclick="confirmDriveDownload()">&#11015; Download PDF</button>
-      <button class="btn" id="btnDrvUpload" style="flex:1;background:linear-gradient(135deg,#16a34a,#166534);color:#fff;display:none;" onclick="openDriveUpload()">&#9729; Open Drive</button>
-    </div>
-  </div>
-</div>
-
+<!-- HEADER -->
 <header>
   <div class="logo">ATC</div>
-  <div class="hdr-text">
+  <div class="htx">
     <h1>Shift Report Generator</h1>
     <p>Achieve Together Care &middot; ABN 68 493 366 184</p>
   </div>
-  <div class="hdr-right">
-    <div class="api-btn" id="apiBadge" onclick="toggleApiPanel()">
-      <div class="api-dot" id="apiDot"></div>
-      <span class="api-lbl" id="apiLbl">Add API Key</span>
+  <div class="hr">
+    <div class="kpill" id="kbadge" onclick="toggleApi()">
+      <div class="kdot" id="kdot"></div>
+      <span class="klbl" id="klbl">Add Key</span>
     </div>
   </div>
 </header>
 
 <div class="wrap">
 
-  <div class="stats">
-    <div class="stat"><div class="sv" id="sHrs">&#8212;</div><div class="sl">Duration</div></div>
-    <div class="stat"><div class="sv" id="sDt">&#8212;</div><div class="sl">Shift Date</div></div>
-    <div class="stat"><div class="sv" id="sKm">&#8212;</div><div class="sl">Travel</div></div>
-    <div class="stat"><div class="sv" id="sTy">&#8212;</div><div class="sl">Support Type</div></div>
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" id="tabShift" onclick="switchTab('shift')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Shift Report
+    </button>
+    <button class="tab" id="tabInv" onclick="switchTab('invoice')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Invoice
+    </button>
+  </div>
+
+  <!-- SHIFT PANEL -->
+  <div class="tab-panel active" id="panelShift">
+
+  <!-- STATS -->
+  <div class="sbar">
+    <div class="sb"><div class="sbv" id="sHrs">&#8212;</div><div class="sbl">Duration</div></div>
+    <div class="sb"><div class="sbv" id="sDt">&#8212;</div><div class="sbl">Shift Date</div></div>
+    <div class="sb"><div class="sbv" id="sKm">&#8212;</div><div class="sbl">Travel KM</div></div>
+    <div class="sb pay"><div class="sbv" id="sPay">&#8212;</div><div class="sbl">This Shift Pay</div></div>
   </div>
 
   <!-- 1. SHIFT DETAILS -->
   <div class="card">
-    <div class="card-hd"><div class="card-num">1</div><span class="card-title">Shift Details</span></div>
-    <div class="card-body">
+    <div class="chd"><div class="cnum">1</div><span class="ctitle">Shift Details</span></div>
+    <div class="cbody">
       <div class="g3" style="margin-bottom:10px;">
         <div class="fld"><label>Date</label><input type="date" id="shiftDate" oninput="updStats()"></div>
-        <div class="fld"><label>Start Time</label><input type="time" id="startTime" value="09:00" oninput="updStats()"></div>
-        <div class="fld"><label>End Time</label><input type="time" id="endTime" value="15:00" oninput="updStats()"></div>
+        <div class="fld"><label>Start</label><input type="time" id="startTime" value="09:00" oninput="updStats()"></div>
+        <div class="fld"><label>Finish</label><input type="time" id="endTime" value="15:00" oninput="updStats()"></div>
       </div>
       <div class="g3">
         <div class="fld"><label>Support Worker</label><input type="text" id="workerName" value="Daniel Hayward"></div>
@@ -297,8 +416,8 @@ input[type=time],input[type=date]{color-scheme:dark;}
 
   <!-- 2. PARTICIPANT -->
   <div class="card">
-    <div class="card-hd"><div class="card-num">2</div><span class="card-title">Participant</span></div>
-    <div class="card-body">
+    <div class="chd"><div class="cnum">2</div><span class="ctitle">Participant</span></div>
+    <div class="cbody">
       <div class="g3">
         <div class="fld"><label>Full Name</label><input type="text" id="participantName" value="Shaun Case"></div>
         <div class="fld"><label>NDIS Number</label><input type="text" id="ndisNum" value="432005774"></div>
@@ -307,17 +426,49 @@ input[type=time],input[type=date]{color-scheme:dark;}
     </div>
   </div>
 
-  <!-- 3. NOTES -->
+  <!-- 3. PAY -->
   <div class="card">
-    <div class="card-hd"><div class="card-num">3</div><span class="card-title">Shift Notes</span><span class="card-hint">AI writes the full report from your notes</span></div>
-    <div class="card-body">
+    <div class="chd"><div class="cnum">3</div><span class="ctitle">Pay Calculator</span><span class="chint">Tracked locally on this device</span></div>
+    <div class="cbody">
+      <div class="g3">
+        <div class="fld"><label>Hourly Rate (AUD)</label><input type="number" id="hourlyRate" placeholder="e.g. 32.50" min="0" step="0.01" oninput="updStats()" value=""></div>
+        <div class="fld"><label>Shift Type</label>
+          <select id="shiftType" onchange="updStats()">
+            <option value="1.0">Weekday (1.0x)</option>
+            <option value="1.5">Saturday (1.5x)</option>
+            <option value="2.0">Sunday (2.0x)</option>
+            <option value="2.5">Public Holiday (2.5x)</option>
+          </select>
+        </div>
+        <div class="fld"><label>KM Rate (AUD/km)</label><input type="number" id="kmRate" placeholder="e.g. 0.99" min="0" step="0.01" oninput="updStats()" value="0.99"></div>
+      </div>
+      <div id="payBanner" class="pay-banner" style="margin-top:12px;display:none;">
+        <div>
+          <div class="pay-lbl">This Shift Earnings</div>
+          <div class="pay-big" id="payTotal">$0.00</div>
+        </div>
+        <div class="pay-info">
+          <div class="pay-breakdown" id="payBreakdown"></div>
+          <div class="pay-total-row">
+            <div class="pay-chip" id="payHrsChip"></div>
+            <div class="pay-chip" id="payKmChip" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. SHIFT NOTES -->
+  <div class="card">
+    <div class="chd"><div class="cnum">4</div><span class="ctitle">Shift Notes</span><span class="chint">AI writes the full report</span></div>
+    <div class="cbody">
       <div class="fld" style="margin-bottom:12px;">
-        <label>What happened &#8212; keywords or bullet points are fine</label>
-        <textarea id="activities" rows="5" placeholder="e.g. assisted morning routine, medical appointment Royal Melbourne, prepared lunch, walked to park 20 mins, watched footy, chatted about weekend&#10;&#10;A few words per activity is enough &#8212; AI writes the full professional report"></textarea>
+        <label>What happened &#8212; keywords are fine</label>
+        <textarea id="activities" rows="5" placeholder="e.g. assisted morning routine, Centrelink visit, Shaun anxious about housing, beach walk, mood improved, lunch at cafe&#10;&#10;A few words per activity is enough &#8212; AI turns these into a professional NDIS report"></textarea>
       </div>
       <div class="fld" style="margin-bottom:12px;">
         <label>Mood &amp; Engagement &#8212; tap all that apply</label>
-        <div class="mood-row">
+        <div class="mood-wrap">
           <button class="mc" data-m="positive" onclick="togMood(this)">&#128522; Positive</button>
           <button class="mc" data-m="neutral" onclick="togMood(this)">&#128528; Neutral</button>
           <button class="mc" data-m="anxious" onclick="togMood(this)">&#128543; Anxious</button>
@@ -326,37 +477,19 @@ input[type=time],input[type=date]{color-scheme:dark;}
           <button class="mc" data-m="distressed" onclick="togMood(this)">&#128560; Distressed</button>
         </div>
       </div>
-      <div class="g2b">
-        <div class="fld">
-          <label>NDIS Goals &#8212; tap to multi-select</label>
-          <select id="goals" multiple size="5">
-            <option value="Community Access &amp; Participation">Community Access &amp; Participation</option>
-            <option value="Independence in Daily Living">Independence in Daily Living</option>
-            <option value="Social Skills &amp; Relationships">Social Skills &amp; Relationships</option>
-            <option value="Health &amp; Wellbeing">Health &amp; Wellbeing</option>
-            <option value="Communication">Communication</option>
-            <option value="Transport &amp; Mobility">Transport &amp; Mobility</option>
-            <option value="Employment &amp; Education">Employment &amp; Education</option>
-            <option value="Behaviour Support">Behaviour Support</option>
-            <option value="Domestic Skills">Domestic Skills</option>
-            <option value="Self Care &amp; Personal Hygiene">Self Care &amp; Personal Hygiene</option>
-          </select>
-        </div>
-        <div class="fld">
-          <label>Additional Notes (optional)</label>
-          <textarea id="notes" rows="5" placeholder="Health, medication, family contact, any other observations..."></textarea>
-        </div>
+      <div class="fld">
+        <label>Additional Notes (optional)</label>
+        <textarea id="notes" rows="3" placeholder="Health updates, medication, family contact, observations..."></textarea>
       </div>
     </div>
   </div>
 
-  <!-- 4. TRANSPORT -->
+  <!-- 5. TRANSPORT -->
   <div class="card">
-    <div class="card-hd"><div class="card-num">4</div><span class="card-title">Transport</span></div>
-    <div class="card-body">
+    <div class="chd"><div class="cnum">5</div><span class="ctitle">Transport</span></div>
+    <div class="cbody">
       <div class="g3">
-        <div class="fld">
-          <label>Transport Provided?</label>
+        <div class="fld"><label>Transport Provided?</label>
           <select id="transportUsed" onchange="togTransport()">
             <option value="no">No transport</option>
             <option value="yes">Yes &#8212; provided transport</option>
@@ -375,13 +508,12 @@ input[type=time],input[type=date]{color-scheme:dark;}
     </div>
   </div>
 
-  <!-- 5. INCIDENT -->
+  <!-- 6. INCIDENT -->
   <div class="card">
-    <div class="card-hd"><div class="card-num">5</div><span class="card-title">Incident / Behaviour</span></div>
-    <div class="card-body">
-      <div class="g2" style="margin-bottom:0;">
-        <div class="fld">
-          <label>Incident This Shift?</label>
+    <div class="chd"><div class="cnum">6</div><span class="ctitle">Incident / Behaviour</span></div>
+    <div class="cbody">
+      <div class="g2">
+        <div class="fld"><label>Incident This Shift?</label>
           <select id="incOccurred" onchange="togIncident()">
             <option value="no">No incident</option>
             <option value="yes">Yes &#8212; incident to report</option>
@@ -399,88 +531,235 @@ input[type=time],input[type=date]{color-scheme:dark;}
             <option>Near Miss</option>
           </select>
         </div>
-        <div class="fld full" id="incDescWrap" style="display:none;"><label>What happened and how was it managed?</label><textarea id="incDesc" rows="3" placeholder="Describe what occurred, how it was handled, and the outcome..."></textarea></div>
+        <div class="fld full" id="incDescWrap" style="display:none;"><label>What happened &amp; how was it managed?</label><textarea id="incDesc" rows="3" placeholder="Describe what occurred, how it was handled, and the outcome..."></textarea></div>
       </div>
     </div>
   </div>
 
-  <!-- GENERATE & SAVE -->
-  <div class="action-card">
-    <div class="action-hd">&#9889; Generate &amp; Save Report</div>
+  <!-- EARNINGS TRACKER -->
+  <div class="earn-card">
+    <div class="earn-hd">
+      <span class="earn-title">&#128176; Earnings Tracker</span>
+      <button class="earn-reset" onclick="resetEarnings()">Reset all</button>
+    </div>
+    <div class="earn-grid">
+      <div class="earn-stat"><div class="earn-stat-v" id="etTotal">$0</div><div class="earn-stat-l">Total Earned</div></div>
+      <div class="earn-stat"><div class="earn-stat-v" id="etShifts">0</div><div class="earn-stat-l">Shifts Logged</div></div>
+      <div class="earn-stat"><div class="earn-stat-v" id="etHrs">0h</div><div class="earn-stat-l">Total Hours</div></div>
+    </div>
+    <div class="earn-history" id="earnHistory"></div>
+  </div>
+
+  <!-- GOOGLE DRIVE SYNC -->
+  <div class="drive-bar" id="driveBar">
+    <div class="drive-icon">&#9729;</div>
+    <div class="drive-info">
+      <div class="drive-title">Google Drive Auto-Sync</div>
+      <div class="drive-sub" id="driveSub">Sign in to automatically save PDFs to Drive after each report</div>
+      <span class="drive-file-link" id="driveFileLink" style="display:none;" onclick="openLastDriveFile()"></span>
+    </div>
+    <button class="btn-drive-connect" id="driveConnectBtn" onclick="driveSignIn()">&#128274; Connect Drive</button>
+    <button class="btn-drive-upload" id="driveUploadBtn" onclick="driveUploadNow()" disabled style="display:none;">&#11014; Upload PDF</button>
+  </div>
+
+  <!-- GENERATE -->
+  <div class="gcard">
+    <div class="gcard-lbl">&#9889; Generate &amp; Save</div>
     <button class="btn-gen" onclick="generate()">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       Generate AI Shift Report
     </button>
-    <div class="save-grid">
+    <div class="sgrid">
       <button class="btn btn-ghost" id="btnPrev" disabled onclick="showReport()">&#128065; Preview</button>
-      <button class="btn btn-drv" id="btnDrv" disabled onclick="doDrive()">&#11015; Download PDF</button>
-      <button class="btn btn-cal" id="btnCal" disabled onclick="doCalendar()">&#128197; Calendar</button>
+      <button class="btn btn-sky" id="btnDrv" disabled onclick="doDriveDirect()">&#11015; PDF</button>
+      <button class="btn btn-grn" id="btnCal" disabled onclick="doCalendar()">&#128197; Calendar</button>
     </div>
-    <button class="btn-both" id="btnBoth" disabled onclick="doBoth()">&#9889; Download PDF + Add to Calendar</button>
+    <button class="btn-both" id="btnBoth" disabled onclick="doBoth()">&#9889; Download PDF + Save to Calendar</button>
   </div>
 
-</div>
+  </div><!-- end panelShift -->
 
+  <!-- INVOICE PANEL -->
+  <div class="tab-panel" id="panelInvoice">
+
+    <!-- Invoice Details -->
+    <div class="inv-card">
+      <div class="inv-hd"><div class="inv-hd-icon">$</div><span class="inv-title">Invoice Details</span></div>
+      <div class="inv-body">
+        <div class="g3" style="margin-bottom:10px;">
+          <div class="fld"><label>Invoice #</label><input type="text" id="invNum" value="ATC-2026-0212"></div>
+          <div class="fld"><label>Invoice Date</label><input type="date" id="invDate"></div>
+          <div class="fld"><label>Due Date</label><input type="date" id="invDue"></div>
+        </div>
+        <div class="inv-period-row">
+          <div class="fld"><label>Period Start</label><input type="date" id="invPeriodStart"></div>
+          <div class="fld"><label>Period End</label><input type="date" id="invPeriodEnd"></div>
+        </div>
+        <div class="g3">
+          <div class="fld"><label>Participant</label><input type="text" id="invParticipant" value="Shaun Case"></div>
+          <div class="fld"><label>NDIS #</label><input type="text" id="invNdis" value="431005774"></div>
+          <div class="fld"><label>Worker</label><input type="text" id="invWorker" value="Daniel Hayward"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick-add presets from ATC-021a rates -->
+    <div class="inv-card">
+      <div class="inv-hd"><div class="inv-hd-icon">+</div><span class="inv-title">Add Line Items</span><span class="inv-hint">Tap preset or enter manually</span></div>
+      <div class="inv-body">
+        <div style="margin-bottom:8px;">
+          <div class="fld" style="margin-bottom:6px;"><label>Quick Add — ATC Approved Rates</label></div>
+          <div class="preset-chips">
+            <button class="pchip" onclick="addPreset('Increased Community Participation — CB','09_011_0125_6_3',1,'h',105.43)">&#9679; Community Participation 1h</button>
+            <button class="pchip" onclick="addPreset('Increased Community Participation — CB','09_011_0125_6_3',4,'h',105.43)">&#9679; Community Participation 4h</button>
+            <button class="pchip" onclick="addPreset('Increased Community Participation — CB','09_011_0125_6_3',7,'h',105.43)">&#9679; Community Participation 7h</button>
+            <button class="pchip" onclick="addPreset('Assistance with Accommodation &amp; Tenancy — CB','08_001_0105_2_3',1,'h',97.00)">&#9679; Accommodation &amp; Tenancy 1h</button>
+            <button class="pchip" onclick="addPreset('Provider Travel — Non-Labour Costs (km)','09_011_0125_6_3',50,'km',0.97)">&#9679; Travel 50km</button>
+            <button class="pchip" onclick="addPreset('Provider Travel — Labour','09_011_0125_6_3',0.25,'h',105.43)">&#9679; Travel Labour 0.25h</button>
+          </div>
+        </div>
+        <div class="inv-add-row">
+          <div class="fld"><label>Description</label><input type="text" id="newDesc" placeholder="e.g. Community Participation"></div>
+          <div class="fld"><label>NDIS Code</label><input type="text" id="newCode" placeholder="09_011_0125_6_3"></div>
+          <div class="fld"><label>Qty &amp; Rate</label>
+            <div style="display:flex;gap:5px;">
+              <input type="number" id="newQty" placeholder="Qty" min="0" step="0.25" style="width:50%;">
+              <input type="number" id="newRate" placeholder="Rate" min="0" step="0.01" style="width:50%;">
+            </div>
+          </div>
+          <div class="fld"><label>Unit</label>
+            <select id="newUnit">
+              <option value="h">h</option>
+              <option value="km">km</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-inv-add" onclick="addLineItem()">+ Add Line Item</button>
+      </div>
+    </div>
+
+    <!-- Line Items List -->
+    <div class="inv-card">
+      <div class="inv-hd"><div class="inv-hd-icon">&#8801;</div><span class="inv-title">Line Items</span><span class="inv-hint" id="invLineCount">0 items</span></div>
+      <div class="inv-body">
+        <div id="invLines"><div style="text-align:center;color:var(--mu);font-size:.78rem;padding:16px 0;">No items yet — use Quick Add or enter manually above</div></div>
+        <div class="inv-total-bar">
+          <span class="inv-total-lbl">Total Payable</span>
+          <span class="inv-total-amt" id="invGrandTotal">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice subtotals -->
+    <div class="inv-card" id="invSubCard" style="display:none;">
+      <div class="inv-hd"><div class="inv-hd-icon">&#8721;</div><span class="inv-title">Subtotals</span></div>
+      <div class="inv-body" id="invSubBody"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="gcard">
+      <div class="gcard-lbl">&#128197; Save Invoice to Calendar</div>
+      <button class="btn-inv-cal" onclick="invoiceToCalendar()">
+        &#128197; Save Invoice Event to Google Calendar
+      </button>
+      <button class="btn-inv-both" onclick="invoiceDownloadAndCal()">
+        &#9889; Download Summary + Calendar
+      </button>
+    </div>
+
+  </div><!-- end panelInvoice -->
+
+</div><!-- end wrap -->
 <script>
-var report = null;
-var lastPdfBlob = null;
-var lastPdfFilename = null;
+var report=null;
+var lastFn=null;
 
+// ── API KEY ──
 function getKey(){return localStorage.getItem('atc_key')||'';}
-function saveKey(){
-  var v=document.getElementById('apiInput').value.trim();
-  if(v) localStorage.setItem('atc_key',v);
-  refreshBadge();
-  if(v) toast('API key saved \u2014 AI Ready','success');
-  document.getElementById('apiPanel').classList.remove('open');
-}
-function onApiType(){
-  var v=document.getElementById('apiInput').value.trim();
-  if(v) localStorage.setItem('atc_key',v);
-  refreshBadge();
-}
-function refreshBadge(){
-  var k=getKey(),b=document.getElementById('apiBadge'),d=document.getElementById('apiDot'),l=document.getElementById('apiLbl');
-  if(k){b.classList.add('ready');d.classList.add('on');l.textContent='AI Ready';}
-  else{b.classList.remove('ready');d.classList.remove('on');l.textContent='Add API Key';}
-}
-function toggleApiPanel(){
-  var p=document.getElementById('apiPanel');
-  p.classList.toggle('open');
-  if(p.classList.contains('open')){var i=document.getElementById('apiInput');i.value=getKey();i.focus();}
-}
-document.addEventListener('click',function(e){
-  var p=document.getElementById('apiPanel'),b=document.getElementById('apiBadge');
-  if(p.classList.contains('open')&&!p.contains(e.target)&&!b.contains(e.target)) p.classList.remove('open');
-});
+function saveKey(){var v=document.getElementById('apiInput').value.trim();if(v)localStorage.setItem('atc_key',v);refreshBadge();if(v)toast('API key saved — AI Ready','success');document.getElementById('apiP').classList.remove('open');}
+function onApiType(){var v=document.getElementById('apiInput').value.trim();if(v)localStorage.setItem('atc_key',v);refreshBadge();}
+function refreshBadge(){var k=getKey(),b=document.getElementById('kbadge'),d=document.getElementById('kdot'),l=document.getElementById('klbl');if(k){b.classList.add('on');d.classList.add('on');l.textContent='AI Ready';}else{b.classList.remove('on');d.classList.remove('on');l.textContent='Add Key';}}
+function toggleApi(){var p=document.getElementById('apiP');p.classList.toggle('open');if(p.classList.contains('open')){var i=document.getElementById('apiInput');i.value=getKey();i.focus();}}
+document.addEventListener('click',function(e){var p=document.getElementById('apiP'),b=document.getElementById('kbadge');if(p.classList.contains('open')&&!p.contains(e.target)&&!b.contains(e.target))p.classList.remove('open');});
+
+// ── HELPERS ──
 function togMood(el){el.classList.toggle('on');}
-function togTransport(){
-  var yes=document.getElementById('transportUsed').value==='yes';
-  document.getElementById('kmWrap').style.display=yes?'block':'none';
-  document.getElementById('vehWrap').style.display=yes?'block':'none';
-  updStats();
-}
-function togIncident(){
-  var yes=document.getElementById('incOccurred').value==='yes';
-  document.getElementById('incTypeWrap').style.display=yes?'block':'none';
-  document.getElementById('incDescWrap').style.display=yes?'block':'none';
-}
+function togTransport(){var y=document.getElementById('transportUsed').value==='yes';document.getElementById('kmWrap').style.display=y?'block':'none';document.getElementById('vehWrap').style.display=y?'block':'none';updStats();}
+function togIncident(){var y=document.getElementById('incOccurred').value==='yes';document.getElementById('incTypeWrap').style.display=y?'block':'none';document.getElementById('incDescWrap').style.display=y?'block':'none';}
 function toMin(t){var p=t.split(':').map(Number);return p[0]*60+p[1];}
+function fmt$(n){return '$'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+
+// ── STATS + PAY ──
 function updStats(){
   var s=document.getElementById('startTime').value,e=document.getElementById('endTime').value;
-  if(s&&e){var d=(toMin(e)-toMin(s))/60;document.getElementById('sHrs').textContent=d>0?d.toFixed(1)+'h':'\u2014';}
+  var hrs=0;
+  if(s&&e){hrs=(toMin(e)-toMin(s))/60;document.getElementById('sHrs').textContent=hrs>0?hrs.toFixed(1)+'h':'—';}
   var dt=document.getElementById('shiftDate').value;
-  if(dt) document.getElementById('sDt').textContent=new Date(dt+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'});
-  var km=document.getElementById('kilometres').value,tr=document.getElementById('transportUsed').value;
-  document.getElementById('sKm').textContent=(tr==='yes'&&km)?km+' km':'\u2014';
-  document.getElementById('sTy').textContent=document.getElementById('supportType').value.split(' ')[0];
+  if(dt)document.getElementById('sDt').textContent=new Date(dt+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+  var km=parseFloat(document.getElementById('kilometres').value)||0,tr=document.getElementById('transportUsed').value;
+  document.getElementById('sKm').textContent=(tr==='yes'&&km)?km+' km':'—';
+  // pay calc
+  var rate=parseFloat(document.getElementById('hourlyRate').value)||0;
+  var mult=parseFloat(document.getElementById('shiftType').value)||1;
+  var kmr=parseFloat(document.getElementById('kmRate').value)||0;
+  if(rate>0&&hrs>0){
+    var hrsPay=hrs*rate*mult;
+    var kmPay=(tr==='yes'&&km)?km*kmr:0;
+    var total=hrsPay+kmPay;
+    document.getElementById('sPay').textContent=fmt$(total);
+    document.getElementById('payTotal').textContent=fmt$(total);
+    document.getElementById('payBreakdown').textContent=hrs.toFixed(1)+'h x '+fmt$(rate)+' x '+mult+'x = '+fmt$(hrsPay)+(kmPay?' + KM '+fmt$(kmPay):'');
+    document.getElementById('payHrsChip').textContent=hrs.toFixed(1)+' hrs @ '+fmt$(rate);
+    if(kmPay){document.getElementById('payKmChip').textContent=km+' km @ $'+kmr;document.getElementById('payKmChip').style.display='';}else{document.getElementById('payKmChip').style.display='none';}
+    document.getElementById('payBanner').style.display='flex';
+  } else {
+    document.getElementById('sPay').textContent='—';
+    document.getElementById('payBanner').style.display='none';
+  }
+  refreshEarnings();
 }
+
+// ── EARNINGS TRACKER ──
+function getEarnings(){try{return JSON.parse(localStorage.getItem('atc_earnings')||'[]');}catch(e){return[];}}
+function saveEarningsData(arr){localStorage.setItem('atc_earnings',JSON.stringify(arr));}
+function addEarning(date,hrs,pay,participant){
+  var arr=getEarnings();
+  arr.unshift({date:date,hrs:parseFloat(hrs),pay:parseFloat(pay),participant:participant,ts:Date.now()});
+  if(arr.length>50)arr=arr.slice(0,50);
+  saveEarningsData(arr);
+  refreshEarnings();
+}
+function resetEarnings(){if(confirm('Reset all earnings history?')){localStorage.removeItem('atc_earnings');refreshEarnings();toast('Earnings history cleared','info');}}
+function refreshEarnings(){
+  var arr=getEarnings();
+  var total=arr.reduce(function(s,r){return s+r.pay;},0);
+  var shifts=arr.length;
+  var hours=arr.reduce(function(s,r){return s+r.hrs;},0);
+  document.getElementById('etTotal').textContent=fmt$(total);
+  document.getElementById('etShifts').textContent=shifts;
+  document.getElementById('etHrs').textContent=hours.toFixed(1)+'h';
+  var el=document.getElementById('earnHistory');
+  if(!arr.length){el.innerHTML='<div class="earn-empty">No shifts logged yet. Generate a report to track earnings.</div>';return;}
+  el.innerHTML=arr.map(function(r){
+    var d=new Date(r.date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'2-digit'});
+    return '<div class="earn-row"><span class="earn-row-d">'+d+' &middot; '+r.participant+' &middot; '+r.hrs.toFixed(1)+'h</span><span class="earn-row-p">'+fmt$(r.pay)+'</span></div>';
+  }).join('');
+}
+
+// ── COLLECT FORM ──
 function collect(){
   var s=document.getElementById('startTime').value,e=document.getElementById('endTime').value;
+  var hrs=(toMin(e)-toMin(s))/60;
+  var rate=parseFloat(document.getElementById('hourlyRate').value)||0;
+  var mult=parseFloat(document.getElementById('shiftType').value)||1;
+  var km=parseFloat(document.getElementById('kilometres').value)||0;
+  var kmr=parseFloat(document.getElementById('kmRate').value)||0;
+  var tr=document.getElementById('transportUsed').value==='yes';
+  var hrsPay=rate>0?hrs*rate*mult:0;
+  var kmPay=tr&&km?km*kmr:0;
   return{
     date:document.getElementById('shiftDate').value,
-    start:s,end:e,
-    hours:((toMin(e)-toMin(s))/60).toFixed(1),
+    start:s,end:e,hours:hrs.toFixed(1),
     worker:document.getElementById('workerName').value||'Daniel Hayward',
     type:document.getElementById('supportType').value,
     location:document.getElementById('location').value||'Community',
@@ -489,257 +768,310 @@ function collect(){
     coordinator:document.getElementById('coordinator').value||'Rachel Hanson',
     activities:document.getElementById('activities').value,
     moods:Array.from(document.querySelectorAll('.mc.on')).map(function(x){return x.dataset.m;}),
-    goals:Array.from(document.getElementById('goals').selectedOptions).map(function(o){return o.value;}).join(', '),
+    goals:'',
     notes:document.getElementById('notes').value,
-    transport:document.getElementById('transportUsed').value==='yes',
-    km:document.getElementById('kilometres').value||'0',
-    vehicle:document.getElementById('vehicle').value,
+    transport:tr,km:km,vehicle:document.getElementById('vehicle').value,
     incident:document.getElementById('incOccurred').value==='yes',
     incType:document.getElementById('incType').value,
-    incDesc:document.getElementById('incDesc').value
+    incDesc:document.getElementById('incDesc').value,
+    rate:rate,mult:mult,kmRate:kmr,
+    hrsPay:hrsPay,kmPay:kmPay,totalPay:hrsPay+kmPay
   };
 }
 
+// ── GENERATE ──
 async function generate(){
   var key=getKey();
-  if(!key){toast('Add your API key first','error');document.getElementById('apiPanel').classList.add('open');return;}
+  if(!key){toast('Add your API key first','error');document.getElementById('apiP').classList.add('open');return;}
   var d=collect();
-  if(!d.date||!d.start||!d.end){toast('Fill in shift date and times','error');return;}
-  if(!d.activities.trim()){toast('Add some notes about what happened','error');return;}
-  showLdg('Writing shift report...');
-  var moodMap={positive:'positive, engaged and in good spirits',neutral:'settled and stable',anxious:'anxious, needed reassurance at times',agitated:'agitated, required calm de-escalation',withdrawn:'quiet and withdrawn',distressed:'distressed, required significant support'};
+  if(!d.date||!d.start||!d.end){toast('Fill in date and times','error');return;}
+  if(!d.activities.trim()){toast('Add some shift notes first','error');return;}
+  showLdg('Writing shift report...','Claude is reading your notes');
+  var moodMap={positive:'positive, engaged and in good spirits',neutral:'settled and stable',anxious:'anxious and needed reassurance at times',agitated:'agitated and required calm de-escalation',withdrawn:'quiet and withdrawn',distressed:'distressed and required significant support'};
   var moods=d.moods.length?d.moods:['neutral'];
-  var moodDesc=moods.length===1?(moodMap[moods[0]]||'stable'):'mood shifted \u2014 '+moods.map(function(m){return moodMap[m]||m;}).join(', then ');
+  var moodDesc=moods.length===1?(moodMap[moods[0]]||'stable'):'mood shifted — '+moods.map(function(m){return moodMap[m]||m;}).join(', then ');
   var dateStr=new Date(d.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   var fn=d.participant.split(' ')[0];
-  var prompt='You are a professional NDIS support worker writing a formal shift report for Achieve Together Care.\n\nSHIFT: '+dateStr+' | '+d.start+'\u2013'+d.end+' ('+d.hours+' hrs) | '+d.type+'\nWorker: '+d.worker+' | Participant: '+d.participant+' (NDIS '+d.ndis+')\nCoordinator: '+d.coordinator+' | Plan Manager: Plan Partners \u2013 ISCP\nLocation: '+d.location+'\nPresentation: '+moodDesc+(d.transport?' | Transport: '+d.km+'km via '+d.vehicle:'')+'\n\nWorker notes:\n'+d.activities+(d.goals?'\nNDIS Goals: '+d.goals:'')+(d.notes?'\nAdditional: '+d.notes:'')+(d.incident?'\nINCIDENT: '+d.incType+' \u2014 '+d.incDesc:'')+'\n\nWrite EXACTLY these 4 sections with bullet points. Professional third-person NDIS language. Specific and factual.\n\nSHIFT SUMMARY\n- [3-4 bullets: overview of the shift]\n\nACTIVITIES COMPLETED\n- [One bullet per activity from the notes above]\n\nPARTICIPANT ENGAGEMENT & PRESENTATION\n- ['+fn+'\'s mood, engagement, communication]\n\nGOALS & PROGRESS\n- [NDIS goals addressed and progress made]\n\nEnd after the last bullet of GOALS & PROGRESS. No extra sections. No recommendations. No future plans.';
+  var payNote=d.totalPay>0?'\nShift earnings: '+fmt$(d.totalPay)+' ('+d.hours+'h @ $'+d.rate+' x'+d.mult+(d.kmPay?' + KM $'+d.kmPay.toFixed(2):'')+')'  :'';
+  var prompt='You are writing a formal NDIS Daily Shift Report for Achieve Together Care.\n\nSHIFT: '+dateStr+' | '+d.start+'–'+d.end+' ('+d.hours+' hrs) | '+d.type+'\nWorker: '+d.worker+' | Participant: '+d.participant+' (NDIS '+d.ndis+')\nCoordinator: '+d.coordinator+' | Plan Manager: Plan Partners – ISCP\nLocation: '+d.location+'\nPresentation: '+moodDesc+(d.transport?' | Transport: '+d.km+'km via '+d.vehicle:'')+payNote+'\n\nWorker notes:\n'+d.activities+(d.goals?'\nNDIS Goals: '+d.goals:'')+(d.notes?'\nAdditional: '+d.notes:'')+(d.incident?'\nINCIDENT: '+d.incType+' — '+d.incDesc:'')+'\n\nWrite EXACTLY these 4 sections, plain text only, NO markdown, NO asterisks, NO bold, NO hashes.\n\nSHIFT SUMMARY\n- [3-4 specific bullets about this shift]\n\nACTIVITIES COMPLETED\n- [One bullet per activity from the notes above]\n\nPARTICIPANT ENGAGEMENT & PRESENTATION\n- ['+fn+'\'s mood, engagement, communication]\n\nGOALS & PROGRESS\n- [NDIS goals addressed and progress made]\n\nSTOP after GOALS & PROGRESS last bullet. No more sections. No recommendations. No future plans.';
   try{
-    var res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,messages:[{role:'user',content:prompt}]})
-    });
+    var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
     var json=await res.json();
-    if(json.error) throw new Error(json.error.message);
+    if(json.error)throw new Error(json.error.message);
     var text=json.content[0].text.trim();
+    // strip any markdown that snuck through
+    text=text.replace(/\*\*([^*]+)\*\*/g,'$1').replace(/\*([^*]+)\*/g,'$1').replace(/^#+\s*/gm,'').replace(/^___+$/gm,'');
     report={text:text,data:d};
+    // save earnings
+    if(d.totalPay>0)addEarning(d.date,d.hours,d.totalPay,d.participant);
     hideLdg();
-    renderReport(text,d);
     enableBtns();
-    toast('Report ready \u2713','success');
+    toast('Report ready — opening PDF','success');
+    // auto-open PDF preview
+    showReport();
+    // auto Drive upload if connected
+    if(driveIsAuthed())setTimeout(driveUploadNow,1000);
   }catch(err){hideLdg();toast('Error: '+err.message,'error');}
 }
 
-function parseStructured(text){
+// ── PARSE SECTIONS ──
+function parseStructured(raw){
+  // strip markdown
+  var text=raw.replace(/\*\*([^*]+)\*\*/g,'$1').replace(/\*([^*]+)\*/g,'$1').replace(/^#+\s*/gm,'').replace(/_{2,}/g,'');
   var names=['SHIFT SUMMARY','ACTIVITIES COMPLETED','PARTICIPANT ENGAGEMENT & PRESENTATION','GOALS & PROGRESS'];
-  // Cut off anything after last Goals & Progress bullets
+  // cut after Goals & Progress
   var gi=text.indexOf('GOALS & PROGRESS');
-  if(gi>-1){
-    var after=text.indexOf('\n\n',gi+60);
-    if(after>-1) text=text.substring(0,after);
-  }
+  if(gi>-1){var after=text.indexOf('\n\n',gi+80);if(after>-1)text=text.substring(0,after+2);}
   var sections=[];
   names.forEach(function(name,i){
-    var next=names.slice(i+1).join('|');
-    var re=new RegExp(name+'\\s*\\n([\\s\\S]*?)'+(next?'(?='+next+'|$)':'(?=$)'));
+    var nextNames=names.slice(i+1);
+    var boundary=nextNames.length?'(?='+nextNames.map(function(n){return n.replace(/[&]/g,'\\&');}).join('|')+'|$)':'(?=$)';
+    var re=new RegExp(name.replace(/[&]/g,'\\&')+'[:\\s]*\\n([\\s\\S]*?)'+boundary);
     var m=text.match(re);
     if(m){
-      var bullets=m[1].trim().split('\n').filter(function(l){return l.trim().match(/^[-\u2022*]/);}).map(function(l){return l.trim().replace(/^[-\u2022*]\s*/,'');});
-      if(bullets.length) sections.push({title:name,bullets:bullets});
+      var bullets=m[1].trim().split('\n').filter(function(l){return l.trim().match(/^[-•*▸]/);}).map(function(l){return l.trim().replace(/^[-•*▸]\s*/,'');});
+      if(bullets.length)sections.push({title:name,bullets:bullets});
     }
   });
-  if(!sections.length) sections=[{title:'SHIFT REPORT',bullets:text.split('\n').filter(function(l){return l.trim();})}];
+  // fallback — split on ALL CAPS lines
+  if(!sections.length){
+    var lines=text.split('\n');
+    var cur=null;
+    lines.forEach(function(l){
+      var t=l.trim();
+      var known=names.filter(function(n){return t===n||t===n+':';});
+      if(known.length){cur={title:known[0],bullets:[]};sections.push(cur);}
+      else if(cur&&t.match(/^[-•*]/))cur.bullets.push(t.replace(/^[-•*]\s*/,''));
+    });
+  }
+  if(!sections.length)sections=[{title:'SHIFT REPORT',bullets:text.split('\n').filter(function(l){return l.trim()&&!l.match(/^[#*_]+$/);}).map(function(l){return l.replace(/^[-*•]\s*/,'');})}];
   return sections;
 }
 
+// ── RENDER REPORT PREVIEW ──
 function renderReport(text,d){
   var dateStr=new Date(d.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   var sections=parseStructured(text);
-  var sectHTML=sections.map(function(s){
-    var bl=s.bullets.map(function(b){return '<li>'+b+'</li>';}).join('');
-    return '<div class="rpt-sec"><div class="rpt-sec-lbl">'+s.title+'</div><ul>'+bl+'</ul></div>';
+  var clsMap={'SHIFT SUMMARY':'sum','ACTIVITIES COMPLETED':'act','PARTICIPANT ENGAGEMENT & PRESENTATION':'eng','GOALS & PROGRESS':'gls'};
+  var secHTML=sections.map(function(s){
+    var cls=clsMap[s.title]||'sum';
+    var items=s.bullets.map(function(b){return '<li>'+b+'</li>';}).join('');
+    return '<div class="rsec"><div class="rsec-hd '+cls+'"><span class="rsec-hd-lbl">'+s.title+'</span><span class="rsec-hd-ct">'+s.bullets.length+' items</span></div><ul class="rsec-body">'+items+'</ul></div>';
   }).join('');
-  var html='<div class="rpt-hd">'
-    +'<div><div class="rpt-org">Achieve Together Care</div><div class="rpt-org-sub">NDIS Disability Services &middot; ABN 68 493 366 184</div></div>'
-    +'<div class="rpt-hd-badge"><div class="bd">'+d.participant+'</div><div class="bt">NDIS '+d.ndis+'</div></div>'
+  var payLine=d.totalPay>0?'<div class="rm"><div class="rm-k">Earnings</div><div class="rm-v" style="color:var(--gld2);">'+fmt$(d.totalPay)+'</div></div>':'';
+  var html='<div class="rpt-wrap">'
+    +'<div class="rpt-banner">'
+      +'<div><div class="rpt-org-name">Achieve Together Care</div><div class="rpt-org-sub">NDIS Disability Services &middot; ABN 68 493 366 184</div></div>'
+      +'<div class="rpt-who"><div class="rpt-who-name">'+d.participant+'</div><div class="rpt-who-ndis">NDIS '+d.ndis+'</div></div>'
     +'</div>'
-    +'<div class="rpt-strip">'
-    +'<div class="rs"><div class="rs-k">Date</div><div class="rs-v">'+dateStr+'</div></div>'
-    +'<div class="rs"><div class="rs-k">Time</div><div class="rs-v">'+d.start+' \u2013 '+d.end+'</div></div>'
-    +'<div class="rs"><div class="rs-k">Hours</div><div class="rs-v">'+d.hours+' hrs</div></div>'
-    +'<div class="rs"><div class="rs-k">Worker</div><div class="rs-v">'+d.worker+'</div></div>'
-    +'<div class="rs"><div class="rs-k">Type</div><div class="rs-v">'+d.type+'</div></div>'
-    +(d.transport?'<div class="rs"><div class="rs-k">KM</div><div class="rs-v">'+d.km+' km</div></div>':'')
+    +'<div class="rpt-meta">'
+      +'<div class="rm"><div class="rm-k">Date</div><div class="rm-v">'+dateStr+'</div></div>'
+      +'<div class="rm"><div class="rm-k">Time</div><div class="rm-v">'+d.start+' – '+d.end+'</div></div>'
+      +'<div class="rm"><div class="rm-k">Hours</div><div class="rm-v">'+d.hours+' hrs</div></div>'
+      +'<div class="rm"><div class="rm-k">Worker</div><div class="rm-v">'+d.worker+'</div></div>'
+      +'<div class="rm"><div class="rm-k">Type</div><div class="rm-v">'+d.type+'</div></div>'
+      +payLine
     +'</div>'
-    +'<div class="rpt-body">'+sectHTML+'</div>'
-    +'<div class="rpt-foot"><span>Achieve Together Care &middot; CONFIDENTIAL</span><span>'+dateStr+'</span></div>';
+    +'<div class="rpt-sections">'+secHTML+'</div>'
+    +'<div class="rpt-foot"><span>Achieve Together Care &middot; CONFIDENTIAL &middot; ABN 68 493 366 184</span><span>'+dateStr+'</span></div>'
+    +'</div>';
   document.getElementById('rptBox').innerHTML=html;
 }
 
+// ── BUILD PDF ──
 function buildPdf(){
-  if(!report) return null;
-  var {jsPDF}=window.jspdf;
+  if(!report)return null;
+  var{jsPDF}=window.jspdf;
   var doc=new jsPDF({unit:'mm',format:'a4'});
   var d=report.data;
   var W=210,M=16,TW=W-M*2;
   var dateStr=new Date(d.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
 
   function hdr(){
-    doc.setFillColor(26,64,152);doc.rect(0,0,W,11,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(255,255,255);
-    doc.text('Achieve Together Care',M,8);
-    doc.setFont('helvetica','italic');doc.setFontSize(7);doc.setTextColor(180,210,255);
-    doc.text('NDIS Disability Services  \u00B7  Empowering Lives, Achieving Together',M,13.5);
-    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
-    doc.text('info@achievetogethercare.com.au',W-M,8,{align:'right'});
-    doc.text('admin@achievetogethercare.com.au',W-M,12.5,{align:'right'});
-    doc.setFillColor(240,245,255);doc.rect(0,19,W,13,'F');
-    doc.setDrawColor(200,215,240);doc.setLineWidth(0.3);doc.line(0,19,W,19);doc.line(0,32,W,32);
-    doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(26,64,152);
-    doc.text('DAILY SHIFT REPORT \u2014 '+dateStr,W/2,27.5,{align:'center'});
+    // Deep navy top band
+    doc.setFillColor(10,24,60);doc.rect(0,0,W,16,'F');
+    // Gold accent line
+    doc.setFillColor(201,146,42);doc.rect(0,0,W,1.8,'F');
+    // Org name
+    doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(232,168,48);
+    doc.text('Achieve Together Care',M,10.5);
+    // Tagline
+    doc.setFont('helvetica','italic');doc.setFontSize(7);doc.setTextColor(160,190,230);
+    doc.text('NDIS Disability Services  ·  Empowering Lives, Achieving Together',M,15);
+    // Contact right
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(130,165,210);
+    doc.text('info@achievetogethercare.com.au',W-M,10,{align:'right'});
+    doc.text('ABN 68 493 366 184',W-M,14.5,{align:'right'});
+    // Title band
+    doc.setFillColor(240,245,255);doc.rect(0,20,W,14,'F');
+    doc.setDrawColor(200,215,240);doc.setLineWidth(0.3);doc.line(0,20,W,20);doc.line(0,34,W,34);
+    doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(15,40,130);
+    doc.text('DAILY SHIFT REPORT',M,29);
+    doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(60,90,160);
+    doc.text(dateStr,W-M,29,{align:'right'});
   }
 
   function ftr(n,t){
-    doc.setFillColor(240,245,255);doc.rect(0,284,W,13,'F');
-    doc.setDrawColor(200,215,240);doc.setLineWidth(0.3);doc.line(0,284,W,284);
-    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(100,120,160);
-    doc.text('Achieve Together Care  \u00B7  Daily Shift Report  \u00B7  CONFIDENTIAL',M,290.5);
-    doc.text('Page '+n+' of '+t,W-M,290.5,{align:'right'});
+    doc.setFillColor(245,248,255);doc.rect(0,283,W,14,'F');
+    doc.setDrawColor(210,220,240);doc.setLineWidth(0.3);doc.line(0,283,W,283);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(100,125,170);
+    doc.text('Achieve Together Care  ·  Daily Shift Report  ·  CONFIDENTIAL  ·  ABN 68 493 366 184',M,289.5);
+    doc.text('Page '+n+' of '+t,W-M,289.5,{align:'right'});
   }
 
-  function secHd(title,y){
-    doc.setFillColor(26,64,152);doc.rect(M,y,TW,7.5,'F');
+  function secHd(label,y,r,g,b){
+    doc.setFillColor(r,g,b);doc.rect(M,y,TW,8,'F');
+    doc.setFillColor(r-20,g-20,b-20);doc.rect(M,y,3,8,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(255,255,255);
-    doc.text(title,M+3,y+5.3);
-    return y+7.5;
+    doc.text(label,M+6,y+5.5);
+    return y+8;
   }
 
-  function bullets(items,y){
-    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,40,60);
+  function blist(items,y){
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(28,38,62);
     items.forEach(function(item){
-      var lines=doc.splitTextToSize('\u2022  '+item,TW-6);
-      if(y+lines.length*5.5>278){doc.addPage();hdr();y=40;}
-      lines.forEach(function(ln,i){doc.text(i===0?ln:'    '+ln.trim(),M+3,y);y+=5.2;});
+      var lines=doc.splitTextToSize('▸  '+item,TW-6);
+      if(y+lines.length*5.5>277){doc.addPage();hdr();y=42;}
+      lines.forEach(function(ln,i){doc.text(i===0?ln:'     '+ln.trim(),M+4,y);y+=5.2;});
       y+=1.5;
     });
     return y+2;
   }
 
   hdr();
-  var y=38;
+  var y=40;
 
-  // Details box
-  doc.setFillColor(248,251,255);doc.rect(M,y,TW,42,'F');
-  doc.setDrawColor(200,215,240);doc.setLineWidth(0.3);doc.rect(M,y,TW,42,'S');
-  // Divider line down middle
-  doc.setDrawColor(220,230,245);doc.line(M+TW/2,y,M+TW/2,y+42);
-
+  // Details box — 2 column
+  doc.setFillColor(248,251,255);doc.rect(M,y,TW,44,'F');
+  doc.setDrawColor(205,218,240);doc.setLineWidth(0.3);doc.rect(M,y,TW,44,'S');
+  doc.setDrawColor(220,230,245);doc.line(M+TW/2,y,M+TW/2,y+44);
   var c1=M+4,c2=M+TW/2+4;
-  var left=[['Date',dateStr],['Participant',d.participant],['NDIS Number',d.ndis],['Coordinator',d.coordinator],['Plan Manager','Plan Partners \u2014 ISCP']];
-  var right=[['Support Worker',d.worker],['Support Type',d.type],['Shift Time',d.start+' \u2013 '+d.end],['Hours',d.hours+' hrs'],[d.transport?'Kilometres':' ',d.transport?d.km+' km \u00B7 '+d.vehicle:' ']];
-  
-  left.forEach(function(row,i){
-    var ry=y+6+i*7.8;
-    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(26,64,152);
-    doc.text(row[0],c1,ry);
-    doc.setFont('helvetica','normal');doc.setTextColor(30,40,60);
-    var txt=doc.splitTextToSize(String(row[1]),TW/2-8);
-    doc.text(txt[0],c1+doc.getTextWidth(row[0])+2,ry);
+  [['Date',dateStr],['Participant',d.participant],['NDIS Number',d.ndis],['Coordinator',d.coordinator],['Plan Manager','Plan Partners — ISCP']].forEach(function(row,i){
+    var ry=y+6+i*8.2;
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(15,40,130);doc.text(row[0],c1,ry);
+    doc.setFont('helvetica','normal');doc.setTextColor(25,35,60);
+    var txt=doc.splitTextToSize(String(row[1]),TW/2-10);
+    doc.text(txt[0]||'',c1+doc.getTextWidth(row[0])+2,ry);
   });
-  right.forEach(function(row,i){
-    var ry=y+6+i*7.8;
-    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(26,64,152);
-    doc.text(row[0],c2,ry);
-    doc.setFont('helvetica','normal');doc.setTextColor(30,40,60);
-    doc.text(String(row[1]),c2+doc.getTextWidth(row[0])+2,ry);
+  [['Support Worker',d.worker],['Support Type',d.type],['Shift Time',d.start+' – '+d.end],['Hours',d.hours+' hrs'],[d.transport?'Transport':' ',d.transport?d.km+'km · '+d.vehicle:' ']].forEach(function(row,i){
+    var ry=y+6+i*8.2;
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(15,40,130);doc.text(row[0],c2,ry);
+    doc.setFont('helvetica','normal');doc.setTextColor(25,35,60);doc.text(String(row[1]),c2+doc.getTextWidth(row[0])+2,ry);
   });
-  y+=46;
 
-  // Report sections
+  // Pay row if applicable
+  if(d.totalPay>0){
+    y+=46;
+    doc.setFillColor(255,249,235);doc.rect(M,y,TW,9,'F');
+    doc.setDrawColor(201,146,42);doc.setLineWidth(0.5);doc.rect(M,y,TW,9,'S');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(140,80,0);
+    doc.text('SHIFT EARNINGS:',M+4,y+6);
+    doc.setFont('helvetica','normal');doc.setTextColor(80,50,0);
+    doc.text(fmt$(d.totalPay)+'  ('+d.hours+'h @ $'+d.rate+'/hr x'+d.mult+(d.kmPay?' + '+d.km+'km @ $'+d.kmRate:'')+')  ·  Worker: '+d.worker,M+36,y+6);
+    y+=11;
+  } else {
+    y+=46;
+  }
+
+  // Sections
   var sects=parseStructured(report.text);
+  var colors={'SHIFT SUMMARY':[26,64,152],'ACTIVITIES COMPLETED':[14,110,61],'PARTICIPANT ENGAGEMENT & PRESENTATION':[91,39,145],'GOALS & PROGRESS':[140,68,0]};
   sects.forEach(function(s){
-    if(y>265){doc.addPage();hdr();y=40;}
-    y=secHd(s.title,y)+3;
-    y=bullets(s.bullets,y);
+    if(y>262){doc.addPage();hdr();y=42;}
+    var c=colors[s.title]||[26,64,152];
+    y=secHd(s.title,y,c[0],c[1],c[2])+3;
+    y=blist(s.bullets,y);
   });
 
   // Incident
   if(d.incident){
-    if(y>250){doc.addPage();hdr();y=40;}
-    y=secHd('INCIDENT REPORT \u2014 '+d.incType,y)+3;
-    doc.setFillColor(255,240,240);doc.rect(M,y-2,TW,5,'F');
+    if(y>252){doc.addPage();hdr();y=42;}
+    y=secHd('INCIDENT REPORT — '+d.incType,y,160,30,30)+3;
+    doc.setFillColor(255,242,242);doc.rect(M,y-1,TW,5,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(160,30,30);
-    doc.text(d.incType,M+3,y+2);y+=7;
-    y=bullets([d.incDesc],y);
+    doc.text(d.incType,M+4,y+3);y+=7;
+    y=blist([d.incDesc],y);
   }
 
-  // Signature block
-  if(y>265){doc.addPage();hdr();y=40;}
+  // Signature
+  if(y>265){doc.addPage();hdr();y=42;}
   y+=6;
-  doc.setFillColor(248,251,255);doc.rect(M,y,TW,22,'F');
-  doc.setDrawColor(200,215,240);doc.rect(M,y,TW,22,'S');
-  doc.setDrawColor(100,140,200);doc.setLineWidth(0.4);doc.line(M+6,y+16,M+65,y+16);
-  doc.setFont('helvetica','italic');doc.setFontSize(8);doc.setTextColor(80,100,140);
-  doc.text(d.worker,M+6,y+13);
-  doc.setFont('helvetica','normal');doc.setFontSize(7);
-  doc.text('Support Worker  \u00B7  Achieve Together Care',M+6,y+19.5);
-  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(100,120,160);
-  doc.text('Report generated: '+new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}),W-M,y+8,{align:'right'});
-  doc.text('ABN 68 493 366 184',W-M,y+14,{align:'right'});
+  doc.setFillColor(248,251,255);doc.rect(M,y,TW,24,'F');
+  doc.setDrawColor(205,218,240);doc.setLineWidth(0.3);doc.rect(M,y,TW,24,'S');
+  doc.setDrawColor(100,140,200);doc.setLineWidth(0.5);doc.line(M+6,y+18,M+68,y+18);
+  doc.setFont('helvetica','italic');doc.setFontSize(8.5);doc.setTextColor(50,80,140);
+  doc.text(d.worker,M+6,y+15);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(80,105,155);
+  doc.text('Support Worker  ·  Achieve Together Care',M+6,y+21.5);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(110,130,170);
+  doc.text('Date: '+new Date(d.date+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}),W-M,y+10,{align:'right'});
+  doc.text('Coordinator: '+d.coordinator,W-M,y+16.5,{align:'right'});
+  doc.text('Plan Partners — ISCP',W-M,y+21.5,{align:'right'});
 
-  // Footers
   var total=doc.internal.getNumberOfPages();
   for(var i=1;i<=total;i++){doc.setPage(i);ftr(i,total);}
-
   return doc;
 }
 
+function getPdfFilename(){if(!report)return'ATC_Shift.pdf';var d=report.data;return'ATC_Shift_'+d.date+'_'+d.participant.replace(/\s+/g,'_')+'.pdf';}
+
+var currentBlobUrl=null;
 function showReport(){
-  if(!report) return;
+  if(!report)return;
+  var doc=buildPdf();
+  if(!doc)return;
+  var fn=getPdfFilename();
+  document.getElementById('pdfFnLabel').textContent=fn;
+  // revoke old blob
+  if(currentBlobUrl){URL.revokeObjectURL(currentBlobUrl);currentBlobUrl=null;}
+  try{
+    var blob=doc.output('blob');
+    var url=URL.createObjectURL(blob);
+    currentBlobUrl=url;
+    var frame=document.getElementById('pdfFrame');
+    var fallback=document.getElementById('pdfFallback');
+    frame.style.display='block';
+    fallback.style.display='none';
+    frame.src=url;
+    // if iframe fails to load PDF (mobile), show fallback
+    frame.onerror=function(){frame.style.display='none';fallback.style.display='flex';};
+    // mobile browsers often can't embed PDFs — detect after short delay
+    setTimeout(function(){
+      try{
+        // if frame has no content height, show fallback
+        if(frame.contentDocument&&frame.contentDocument.body&&frame.contentDocument.body.innerHTML===''){
+          frame.style.display='none';fallback.style.display='flex';
+        }
+      }catch(e){/* cross-origin, means PDF loaded fine */}
+    },1200);
+  }catch(e){
+    document.getElementById('pdfFrame').style.display='none';
+    document.getElementById('pdfFallback').style.display='flex';
+  }
   openOv('rptModal');
 }
 
-function doDrive(){
-  if(!report) return;
-  var d=report.data;
-  var fn='ATC_Shift_'+d.date+'_'+d.participant.replace(/\s+/g,'_')+'.pdf';
-  document.getElementById('drv-fn').textContent=fn;
-  document.getElementById('drv-pt').textContent=d.participant+' (NDIS '+d.ndis+')';
-  document.getElementById('drv-dt').textContent=new Date(d.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('drvStatus').classList.remove('show');
-  document.getElementById('btnDrvUpload').style.display='none';
-  document.getElementById('btnDrvDownload').style.display='flex';
-  lastPdfFilename=fn;
-  openOv('driveModal');
-}
-
-function confirmDriveDownload(){
-  var doc=buildPdf();
-  if(!doc) return;
-  doc.save(lastPdfFilename);
-  var status=document.getElementById('drvStatus');
-  status.classList.add('show');
-  document.getElementById('drvIcon').textContent='&#10003;';
-  document.getElementById('drvMsg').innerHTML='<strong style="color:var(--green)">PDF downloaded!</strong> Now tap Open Drive to upload it.';
-  document.getElementById('btnDrvDownload').style.display='none';
-  document.getElementById('btnDrvUpload').style.display='flex';
-  toast('PDF saved to Downloads','success');
-}
-
-function openDriveUpload(){
-  window.open('https://drive.google.com/drive/my-drive','_blank');
-  toast('Opening Google Drive \u2014 upload the PDF from Downloads','info');
-  closeOv('driveModal');
+function doDriveDirect(){
+  if(!report)return;
+  var doc=buildPdf();if(!doc)return;
+  var fn=getPdfFilename();
+  doc.save(fn);
+  lastFn=fn;
+  setTimeout(function(){
+    if(confirm('PDF saved to Downloads!\n\nTap OK to open Google Drive so you can upload it.\n\nFilename: '+fn)){window.open('https://drive.google.com/drive/my-drive','_blank');}
+  },500);
+  toast('PDF downloaded — open Drive to upload','success');
 }
 
 function doCalendar(){
-  if(!report) return;
+  if(!report)return;
   var d=report.data;
   var dateStr=new Date(d.date+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('ce-t').textContent='ATC Shift \u2014 '+d.participant;
+  document.getElementById('ce-t').textContent='ATC Shift — '+d.participant;
   document.getElementById('ce-d').textContent=dateStr;
-  document.getElementById('ce-tm').textContent=d.start+' \u2013 '+d.end;
+  document.getElementById('ce-tm').textContent=d.start+' – '+d.end;
   document.getElementById('ce-du').textContent=d.hours+' hours';
+  document.getElementById('ce-pay').textContent=d.totalPay>0?fmt$(d.totalPay):'—';
   document.getElementById('ce-w').textContent=d.worker;
   document.getElementById('ce-n').textContent=d.ndis;
   document.getElementById('ce-c').textContent=d.coordinator;
@@ -748,60 +1080,323 @@ function doCalendar(){
 
 function confirmCal(){
   var d=report.data;
-  var dateBase=d.date.replace(/-/g,'');
-  var start24=d.start.replace(':','');
-  var end24=d.end.replace(':','');
-  var title=encodeURIComponent('ATC Shift \u2014 '+d.participant);
-  var desc=encodeURIComponent(
-    'Achieve Together Care \u2014 Daily Shift Report\n'
-    +'Participant: '+d.participant+' (NDIS '+d.ndis+')\n'
-    +'Worker: '+d.worker+'\n'
-    +'Coordinator: '+d.coordinator+'\n'
-    +'Plan Manager: Plan Partners \u2013 ISCP\n'
-    +'Type: '+d.type+'\n'
-    +'Hours: '+d.hours+'\n'
-    +(d.transport?'KM: '+d.km+' ('+d.vehicle+')\n':'')+'\n'
-    +report.text
-  );
-  var loc=encodeURIComponent(d.location||'Community');
+  var db=d.date.replace(/-/g,'');
   var url='https://calendar.google.com/calendar/render?action=TEMPLATE'
-    +'&text='+title
-    +'&dates='+dateBase+'T'+start24+'00/'+dateBase+'T'+end24+'00'
-    +'&details='+desc
-    +'&location='+loc;
+    +'&text='+encodeURIComponent('ATC Shift — '+d.participant)
+    +'&dates='+db+'T'+d.start.replace(':','')+'00/'+db+'T'+d.end.replace(':','')+'00'
+    +'&details='+encodeURIComponent('Achieve Together Care — Daily Shift Report\nParticipant: '+d.participant+' (NDIS '+d.ndis+')\nWorker: '+d.worker+'\nCoordinator: '+d.coordinator+'\nPlan Manager: Plan Partners – ISCP\nType: '+d.type+'\nHours: '+d.hours+(d.totalPay>0?'\nEarnings: '+fmt$(d.totalPay):'')+'\n\n'+report.text)
+    +'&location='+encodeURIComponent(d.location||'Community');
   window.open(url,'_blank');
   closeOv('calModal');
   toast('Google Calendar opened','success');
 }
 
 function doBoth(){
-  var doc=buildPdf();
-  if(!doc) return;
-  var d=report.data;
-  var fn='ATC_Shift_'+d.date+'_'+d.participant.replace(/\s+/g,'_')+'.pdf';
-  doc.save(fn);
-  setTimeout(function(){doCalendar();},600);
-  toast('PDF downloading + Calendar opening','success');
+  if(!report)return;
+  var doc=buildPdf();if(!doc)return;
+  doc.save(getPdfFilename());
+  setTimeout(function(){doCalendar();},700);
+  toast('PDF saved + Calendar opening','success');
 }
 
 function enableBtns(){['btnPrev','btnCal','btnDrv','btnBoth'].forEach(function(id){document.getElementById(id).disabled=false;});}
 function openOv(id){document.getElementById(id).classList.add('open');}
 function closeOv(id){document.getElementById(id).classList.remove('open');}
-function showLdg(m){document.getElementById('ldgMsg').textContent=m||'Loading...';document.getElementById('ldg').classList.add('on');}
+function showLdg(m,s){document.getElementById('ldgTx').textContent=m||'Loading...';document.getElementById('ldgSub').textContent=s||'';document.getElementById('ldg').classList.add('on');}
 function hideLdg(){document.getElementById('ldg').classList.remove('on');}
 var _tt;
-function toast(msg,type){
-  var el=document.getElementById('toast');
-  el.textContent=({'success':'\u2713 ','error':'\u2715 ','info':'\u2139 '}[type]||'')+msg;
-  el.className='toast '+(type||'info')+' show';
-  clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('show');},4200);
+function toast(msg,type){var el=document.getElementById('toast');el.textContent=({'success':'✓ ','error':'✕ ','info':'ℹ '}[type]||'')+msg;el.className='toast '+(type||'info')+' show';clearTimeout(_tt);_tt=setTimeout(function(){el.classList.remove('show');},4000);}
+
+// ── GOOGLE DRIVE SYNC ──
+// Uses Google Identity Services (token model) + Drive REST API v3
+// User clicks Connect → Google OAuth popup → token stored in memory → uploads automatically
+var DRIVE_CLIENT_ID='';// Set via UI — stored in localStorage
+var driveToken=null;
+var driveTokenExpiry=0;
+var lastDriveFileId=null;
+var lastDriveFileUrl=null;
+
+function getDriveClientId(){return localStorage.getItem('atc_drive_client_id')||'';}
+function saveDriveClientId(id){localStorage.setItem('atc_drive_client_id',id);}
+
+function driveSignIn(){
+  var cid=getDriveClientId();
+  if(!cid){
+    var inp=prompt('Enter your Google OAuth Client ID\n\nGet one free at: console.cloud.google.com\n→ APIs & Services → Credentials → Create OAuth 2.0 Client ID\n→ Application type: Web application\n→ Authorised JS origins: add your site URL\n\nClient ID looks like: 123456-abc.apps.googleusercontent.com');
+    if(!inp||!inp.trim()){return;}
+    cid=inp.trim();
+    saveDriveClientId(cid);
+  }
+  // Request token via Google Identity Services
+  try{
+    var client=google.accounts.oauth2.initTokenClient({
+      client_id:cid,
+      scope:'https://www.googleapis.com/auth/drive.file',
+      callback:function(resp){
+        if(resp.error){
+          driveSetStatus('Sign-in failed: '+resp.error,'err');
+          return;
+        }
+        driveToken=resp.access_token;
+        driveTokenExpiry=Date.now()+(parseInt(resp.expires_in||3600)-60)*1000;
+        driveSetAuthed();
+        toast('Google Drive connected ✓','success');
+        // auto-upload if report already exists
+        if(report)driveUploadNow();
+      }
+    });
+    client.requestAccessToken();
+  }catch(e){
+    driveSetStatus('Google Sign-in unavailable. Make sure you have a Client ID set up.','err');
+  }
 }
+
+function driveIsAuthed(){return driveToken&&Date.now()<driveTokenExpiry;}
+
+function driveSetAuthed(){
+  var bar=document.getElementById('driveBar');
+  bar.classList.add('authed');
+  document.getElementById('driveSub').textContent='Connected — reports will auto-upload to Drive after each generate';
+  document.getElementById('driveSub').className='drive-sub ok';
+  document.getElementById('driveConnectBtn').textContent='✓ Connected';
+  document.getElementById('driveConnectBtn').classList.add('authed');
+  document.getElementById('driveConnectBtn').onclick=driveDisconnect;
+  document.getElementById('driveUploadBtn').style.display='flex';
+  if(report)document.getElementById('driveUploadBtn').disabled=false;
+}
+
+function driveDisconnect(){
+  driveToken=null;driveTokenExpiry=0;
+  var bar=document.getElementById('driveBar');
+  bar.classList.remove('authed');
+  document.getElementById('driveSub').textContent='Sign in to automatically save PDFs to Drive after each report';
+  document.getElementById('driveSub').className='drive-sub';
+  document.getElementById('driveConnectBtn').textContent='&#128274; Connect Drive';
+  document.getElementById('driveConnectBtn').classList.remove('authed');
+  document.getElementById('driveConnectBtn').onclick=driveSignIn;
+  document.getElementById('driveUploadBtn').style.display='none';
+  document.getElementById('driveFileLink').style.display='none';
+  toast('Drive disconnected','info');
+}
+
+function driveSetStatus(msg,type){
+  var el=document.getElementById('driveSub');
+  el.textContent=msg;
+  el.className='drive-sub'+(type?' '+type:'');
+}
+
+async function driveUploadNow(){
+  if(!report){toast('Generate a report first','error');return;}
+  if(!driveIsAuthed()){driveSignIn();return;}
+  var doc=buildPdf();if(!doc)return;
+  var fn=getPdfFilename();
+  var pdfBytes=doc.output('arraybuffer');
+  var btn=document.getElementById('driveUploadBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="drive-spinner"></span> Uploading...';
+  driveSetStatus('Uploading to Google Drive...','');
+  try{
+    // Create multipart upload
+    var boundary='-------atcboundary'+Date.now();
+    var meta=JSON.stringify({name:fn,mimeType:'application/pdf',parents:['root']});
+    // Build multipart body manually
+    var enc=new TextEncoder();
+    var part1=enc.encode('--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n--'+boundary+'\r\nContent-Type: application/pdf\r\n\r\n');
+    var part2=enc.encode('\r\n--'+boundary+'--');
+    var pdfArr=new Uint8Array(pdfBytes);
+    var body=new Uint8Array(part1.length+pdfArr.length+part2.length);
+    body.set(part1,0);body.set(pdfArr,part1.length);body.set(part2,part1.length+pdfArr.length);
+    var res=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,name',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+driveToken,'Content-Type':'multipart/related; boundary='+boundary},
+      body:body
+    });
+    if(!res.ok){var err=await res.json();throw new Error(err.error&&err.error.message||'Upload failed');}
+    var data=await res.json();
+    lastDriveFileId=data.id;
+    lastDriveFileUrl=data.webViewLink||('https://drive.google.com/file/d/'+data.id+'/view');
+    driveSetStatus('Saved to Drive: '+fn,'ok');
+    var lnk=document.getElementById('driveFileLink');
+    lnk.textContent='&#128279; Open in Google Drive';
+    lnk.style.display='block';
+    toast('PDF saved to Google Drive ✓','success');
+  }catch(e){
+    driveSetStatus('Upload failed: '+e.message,'err');
+    toast('Drive upload failed: '+e.message,'error');
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='&#11014; Upload PDF';
+  }
+}
+
+function openLastDriveFile(){if(lastDriveFileUrl)window.open(lastDriveFileUrl,'_blank');}
+
+// patch generate() to auto-upload after report is ready
+var _origEnableBtns=enableBtns;
+function enableBtns(){
+  _origEnableBtns();
+  if(driveIsAuthed()){
+    document.getElementById('driveUploadBtn').disabled=false;
+    setTimeout(driveUploadNow,800);
+  }else if(getDriveClientId()){
+    document.getElementById('driveUploadBtn').style.display='flex';
+    document.getElementById('driveUploadBtn').disabled=false;
+  }
+}
+
+// ── TABS ──
+function switchTab(tab){
+  document.getElementById('panelShift').classList.toggle('active',tab==='shift');
+  document.getElementById('panelInvoice').classList.toggle('active',tab==='invoice');
+  document.getElementById('tabShift').classList.toggle('active',tab==='shift');
+  document.getElementById('tabInv').classList.toggle('active',tab==='invoice');
+}
+
+// ── INVOICE ──
+var invItems=[];
+
+function addPreset(desc,code,qty,unit,rate){
+  invItems.push({desc:desc,code:code,qty:qty,unit:unit,rate:rate,total:qty*rate});
+  renderInvLines();
+  toast(desc.substring(0,30)+'... added','success');
+}
+
+function addLineItem(){
+  var desc=document.getElementById('newDesc').value.trim();
+  var code=document.getElementById('newCode').value.trim();
+  var qty=parseFloat(document.getElementById('newQty').value)||0;
+  var rate=parseFloat(document.getElementById('newRate').value)||0;
+  var unit=document.getElementById('newUnit').value;
+  if(!desc){toast('Enter a description','error');return;}
+  if(!qty||!rate){toast('Enter qty and rate','error');return;}
+  invItems.push({desc:desc,code:code,qty:qty,unit:unit,rate:rate,total:qty*rate});
+  document.getElementById('newDesc').value='';
+  document.getElementById('newQty').value='';
+  document.getElementById('newRate').value='';
+  renderInvLines();
+  toast('Line item added','success');
+}
+
+function removeInvLine(i){invItems.splice(i,1);renderInvLines();}
+
+function renderInvLines(){
+  var el=document.getElementById('invLines');
+  var grand=invItems.reduce(function(s,r){return s+r.total;},0);
+  document.getElementById('invGrandTotal').textContent=fmt$(grand);
+  document.getElementById('invLineCount').textContent=invItems.length+' items';
+  if(!invItems.length){
+    el.innerHTML='<div style="text-align:center;color:var(--mu);font-size:.78rem;padding:16px 0;">No items yet — use Quick Add or enter manually above</div>';
+    document.getElementById('invSubCard').style.display='none';
+    return;
+  }
+  el.innerHTML=invItems.map(function(item,i){
+    return '<div class="inv-line">'
+      +'<div><div class="inv-line-desc">'+item.desc+'</div>'
+      +'<div class="inv-line-code">'+item.code+' &middot; '+item.qty+' '+item.unit+' @ '+fmt$(item.rate)+'</div></div>'
+      +'<div class="inv-line-amt">'+fmt$(item.total)+'</div>'
+      +'<button class="inv-line-del" onclick="removeInvLine('+i+')">&#10005;</button>'
+      +'</div>';
+  }).join('');
+  // subtotals
+  var groups={};
+  invItems.forEach(function(item){
+    var key=item.code==='04_799_0125_6_1'?'Transport (Non-Labour)':
+            item.code==='08_001_0105_2_3'?'Accommodation & Tenancy (Cat 08)':
+            'Community Participation / Labour (Cat 09)';
+    groups[key]=(groups[key]||0)+item.total;
+  });
+  var subEl=document.getElementById('invSubBody');
+  subEl.innerHTML=Object.keys(groups).map(function(k){
+    return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:.8rem;">'
+      +'<span style="color:var(--mu2);">'+k+'</span>'
+      +'<span style="color:var(--gld2);font-weight:700;">'+fmt$(groups[k])+'</span></div>';
+  }).join('');
+  document.getElementById('invSubCard').style.display='block';
+}
+
+function buildInvText(){
+  var num=document.getElementById('invNum').value||'ATC-INV';
+  var ps=document.getElementById('invPeriodStart').value;
+  var pe=document.getElementById('invPeriodEnd').value;
+  var participant=document.getElementById('invParticipant').value||'Shaun Case';
+  var ndis=document.getElementById('invNdis').value||'431005774';
+  var worker=document.getElementById('invWorker').value||'Daniel Hayward';
+  var grand=invItems.reduce(function(s,r){return s+r.total;},0);
+  var fd=function(d){return d?new Date(d+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'-';};
+  var lines=[
+    'ACHIEVE TOGETHER CARE — TAX INVOICE',
+    'Invoice #: '+num,
+    'Period: '+fd(ps)+' to '+fd(pe),
+    'Participant: '+participant+' (NDIS '+ndis+')',
+    'Worker: '+worker,
+    'Plan Manager: Plan Partners — ISCP Plan Management',
+    '',
+    'LINE ITEMS:',
+  ];
+  invItems.forEach(function(r){
+    lines.push('  '+r.desc+' | '+r.code+' | '+r.qty+' '+r.unit+' @ '+fmt$(r.rate)+' = '+fmt$(r.total));
+  });
+  lines.push('');
+  lines.push('TOTAL PAYABLE: '+fmt$(grand));
+  lines.push('');
+  lines.push('Payment: Achieve Together Care | BSB 067-873 | Acc 207-436-73 | ABN 68 493 366 184');
+  return lines.join('\n');
+}
+
+function invoiceToCalendar(){
+  if(!invItems.length){toast('Add line items first','error');return;}
+  var num=document.getElementById('invNum').value||'ATC-INV';
+  var invDate=document.getElementById('invDate').value||new Date().toISOString().split('T')[0];
+  var participant=document.getElementById('invParticipant').value||'Shaun Case';
+  var grand=invItems.reduce(function(s,r){return s+r.total;},0);
+  var db=invDate.replace(/-/g,'');
+  var url='https://calendar.google.com/calendar/render?action=TEMPLATE'
+    +'&text='+encodeURIComponent('ATC Invoice '+num+' — '+participant+' — '+fmt$(grand))
+    +'&dates='+db+'T090000/'+db+'T100000'
+    +'&details='+encodeURIComponent(buildInvText())
+    +'&location='+encodeURIComponent('Plan Partners — ISCP Plan Management');
+  window.open(url,'_blank');
+  toast('Invoice event opening in Google Calendar','success');
+}
+
+function invoiceDownloadAndCal(){
+  if(!invItems.length){toast('Add line items first','error');return;}
+  var num=document.getElementById('invNum').value||'ATC-INV';
+  var participant=document.getElementById('invParticipant').value||'Shaun Case';
+  var blob=new Blob([buildInvText()],{type:'text/plain'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='ATC_Invoice_'+num+'_'+participant.replace(/\s+/g,'_')+'.txt';
+  a.click();
+  setTimeout(invoiceToCalendar,700);
+  toast('Summary downloading + Calendar opening','success');
+}
+
+// ── MODAL CLOSE ON BACKDROP ──
 document.querySelectorAll('.ov').forEach(function(o){
-  o.addEventListener('click',function(e){if(e.target===o) o.classList.remove('open');});
+  o.addEventListener('click',function(e){if(e.target===o)o.classList.remove('open');});
 });
+
 document.getElementById('shiftDate').value=new Date().toISOString().split('T')[0];
+var day=new Date().getDay();
+if(day===6)document.getElementById('shiftType').value='1.5';
+if(day===0)document.getElementById('shiftType').value='2.0';
+
+// Invoice date defaults
+(function(){
+  var today=new Date();
+  var due=new Date(today);due.setDate(due.getDate()+14);
+  document.getElementById('invDate').value=today.toISOString().split('T')[0];
+  document.getElementById('invDue').value=due.toISOString().split('T')[0];
+  var first=new Date(today.getFullYear(),today.getMonth()-1,1);
+  var last=new Date(today.getFullYear(),today.getMonth(),0);
+  document.getElementById('invPeriodStart').value=first.toISOString().split('T')[0];
+  document.getElementById('invPeriodEnd').value=last.toISOString().split('T')[0];
+})();
+
 refreshBadge();
 updStats();
+refreshEarnings();
 </script>
 </body>
 </html>
